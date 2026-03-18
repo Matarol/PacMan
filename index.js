@@ -33,6 +33,8 @@ class Player {
         this.radians = 0.75
         this.openRate = 0.12
         this.rotation = 0
+        this.eyesOffsetX = 3
+        this.eyesOffsetY = -6
     }
 
     draw() {
@@ -45,17 +47,41 @@ class Player {
         c.lineTo(this.position.x, this.position.y)
         c.fillStyle = 'yellow'
         c.fill()
-        c.closePath()
+        c.closePath()        
         c.restore()
+
+        c.beginPath()
+        c.arc(this.position.x + this.eyesOffsetX, this.position.y + this.eyesOffsetY, 3, 0, Math.PI * 2)
+        c.closePath()
+        c.fillStyle = 'black'
+        c.fill()
     }
 
-    update() {
-        this.draw()
+    update() {        
         this.position.x += this.velocity.x
         this.position.y += this.velocity.y
 
         if (this.radians < 0 || this.radians > 0.75) this.openRate = -this.openRate
         this.radians += this.openRate
+
+        if (this.velocity.x > 0) {
+            this.eyesOffsetX = 3
+            this.eyesOffsetY = -6
+        }
+        if (this.velocity.x < 0) {
+            this.eyesOffsetX = -3
+            this.eyesOffsetY = -6
+        }
+        if (this.velocity.y > 0) {
+            this.eyesOffsetX = 6
+            this.eyesOffsetY = 3
+        }
+        if (this.velocity.y < 0) {
+            this.eyesOffsetX = -6
+            this.eyesOffsetY = -3
+        }
+
+        this.draw()
     }
 }
 
@@ -69,6 +95,8 @@ class Ghost {
         this.prevCollisions = []
         this.speed = 2
         this.scared = false
+        this.eyesOffsetX = 0
+        this.eyesOffsetY = 0
     }
 
     draw() {
@@ -98,7 +126,7 @@ class Ghost {
         c.fill()
 
         c.beginPath()
-        c.arc(this.position.x + 4, this.position.y + 6, 2, 0, Math.PI * 2)
+        c.arc(this.position.x + 5 + this.eyesOffsetX, this.position.y + 6 + this.eyesOffsetY, 2, 0, Math.PI * 2)
         c.closePath()
         c.fillStyle = 'black'
         c.fill()        
@@ -112,16 +140,26 @@ class Ghost {
         c.fill()
 
         c.beginPath()
-        c.arc(this.position.x + -6, this.position.y + 6, 2, 0, Math.PI * 2)
+        c.arc(this.position.x + -5 + this.eyesOffsetX, this.position.y + 6 + this.eyesOffsetY, 2, 0, Math.PI * 2)
         c.closePath()
         c.fillStyle = 'black'
         c.fill()
     }
 
-    update() {
-        this.draw()
+    update() {        
         this.position.x += this.velocity.x
         this.position.y += this.velocity.y
+
+        this.eyesOffsetX = 0
+        this.eyesOffsetY = 0
+
+        if (this.velocity.x > 0) this.eyesOffsetX = 1.5
+        else if (this.velocity.x < 0) this.eyesOffsetX = -1.5
+
+        if (this.velocity.y > 0) this.eyesOffsetY = 1.5
+        else if (this.velocity.y < 0) this.eyesOffsetY = -1.5
+
+        this.draw()
     }
 }
 
@@ -489,7 +527,7 @@ function animate() {
                 setTimeout(() => {
                     ghost.scared = false
                 },
-            5000)
+            4000)
             })
 
         }
@@ -525,9 +563,7 @@ function animate() {
 
     // Spelare krockar med spöke
     ghosts.forEach(ghost => {
-        ghost.update()
-
-        
+        ghost.update()        
 
         const collisions = []
         boundaries.forEach(boundary => {
