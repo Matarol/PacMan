@@ -40,10 +40,11 @@ canvas {
     color: white;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 650px) {
     #mobileControls {
         z-index: 1000;
         display: block;
+        min-width: 220px;
     }
     main {
         justify-content: flex-start;
