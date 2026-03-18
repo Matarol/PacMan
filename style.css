@@ -32,6 +32,8 @@ canvas {
 
 #mobileControls button {
     font-size: 24px;
+    width: 100px;
+    height: 60px;
     padding: 15px 20px;
     margin: 5px;
     border-radius: 10px;
@@ -44,9 +46,10 @@ canvas {
     #mobileControls {
         z-index: 1000;
         display: block;
-        min-width: 220px;
+        min-width: 350px;
     }
     main {
+        margin-left: 3px;
         justify-content: flex-start;
     }
 
