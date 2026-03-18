@@ -418,9 +418,7 @@ function init() {
             y: 0
         }
     })
-
     animate()
-
 }
 
 function circleCollidesWithRectangle({

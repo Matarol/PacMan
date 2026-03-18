@@ -20,3 +20,28 @@ canvas {
     display: block;
     /* Ta bort ev. position: absolute om det finns i CSS:en också */
 }
+
+#mobileControls {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+#mobileControls button {
+    font-size: 24px;
+    padding: 15px 20px;
+    margin: 5px;
+    border-radius: 10px;
+    border: none;
+    background: #333;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    #mobileControls {
+        display: block;
+    }
+}
