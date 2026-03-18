@@ -1,3 +1,22 @@
 ﻿body {
+    margin: 0;
     background-color: black;
+    display: flex;         /* Lägg flex även här för säkerhets skull */
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;    /* Centrerar kartan horisontellt */
+    justify-content: center; /* Centrerar kartan vertikalt */
+    min-height: 100vh;
+    /* background-color: #111;  En mörkgrå färg så du ser kontrasten mot svarta banan */
+}
+
+canvas {
+    display: block;
+    /* Ta bort ev. position: absolute om det finns i CSS:en också */
 }
