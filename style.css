@@ -42,6 +42,14 @@ canvas {
 
 @media (max-width: 768px) {
     #mobileControls {
+        z-index: 1000;
         display: block;
+    }
+    main {
+        justify-content: flex-start;
+    }
+
+    #gameUi {
+        top: 210px;
     }
 }

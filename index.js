@@ -6,6 +6,8 @@ const scoreEl = document.getElementById('scoreEl')
 const gameUi = document.getElementById('gameUi')
 const statusText = document.getElementById('statusText')
 
+const mobileButtons = document.querySelectorAll('#mobileControls button')
+
 let pellets = []
 let powerUps = []
 let boundaries = []
@@ -740,4 +742,29 @@ addEventListener('keydown', (e) => {
     if (e.key === ' ' && !gameRunning) {
         init();
     }
+})
+
+mobileButtons.forEach(button => {
+    button.addEventListener('touchstart', (e) => {
+        e.preventDefault
+        const key = button.getAttribute('data-key')
+        keys[key].pressed = true
+        lastKey = key
+    })
+
+    button.addEventListener('touchend', (e) => {
+        const key = button.getAttribute('data-key')
+        keys[key].pressed = false
+    })
+
+    button.addEventListener('mousedown', (e) => {
+        const key = button.getAttribute('data-key')
+        keys[key].pressed = true
+        lastKey = key
+    })
+
+    button.addEventListener('mouseup', (e) => {
+        const key = button.getAttribute('data-key')
+        keys[key].pressed = false
+    })
 })
