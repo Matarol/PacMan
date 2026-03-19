@@ -759,7 +759,7 @@ addEventListener('keydown', (e) => {
 
 mobileButtons.forEach(button => {
     button.addEventListener('touchstart', (e) => {
-        e.preventDefault
+        e.preventDefault()
         const key = button.getAttribute('data-key')
         keys[key].pressed = true
         lastKey = key
