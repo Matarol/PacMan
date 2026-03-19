@@ -1,11 +1,6 @@
 ﻿const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
 
-const dpr = window.devicePixelRatio || 1
-
-c.setTransform(1, 0, 0, 1, 0, 0);
-c.scale(dpr, dpr)
-
 const scoreEl = document.getElementById('scoreEl')
 
 const gameUi = document.getElementById('gameUi')
@@ -235,14 +230,14 @@ const map = [
     ['4', '-', '-', '-', '-', '-', '-', '-', '-', '-', '3']
 ]
 
-const logicalWidth = map[0].length * Boundary.width;
-const logicalHeight = map.length * Boundary.height;
+// const logicalWidth = map[0].length * Boundary.width;
+// const logicalHeight = map.length * Boundary.height;
 
-canvas.style.width = logicalWidth + "px"
-canvas.style.height = logicalHeight + "px"
+// canvas.style.width = logicalWidth + "px"
+// canvas.style.height = logicalHeight + "px"
 
-canvas.width = logicalWidth * dpr
-canvas.height = logicalHeight * dpr
+// canvas.width = logicalWidth * dpr
+// canvas.height = logicalHeight * dpr
 
 // canvas.width = map[0].length * Boundary.width;
 // canvas.height = map.length * Boundary.height;
@@ -257,10 +252,24 @@ function createImage(src) {
 function init() {
     cancelAnimationFrame(animationId)
 
+    const dpr = window.devicePixelRatio || 1;
+
+    const logicalWidth = map[0].length * Boundary.width;
+    const logicalHeight = map.length * Boundary.height;
+
     const scale = Math.min(window.innerWidth / logicalWidth, 1);
 
+    // 👉 CSS size (what user sees)
     canvas.style.width = logicalWidth * scale + "px";
     canvas.style.height = logicalHeight * scale + "px";
+
+    // 👉 Actual pixel size
+    canvas.width = logicalWidth * dpr;
+    canvas.height = logicalHeight * dpr;
+
+    // 👉 CRITICAL: reset + apply BOTH scales
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.scale(dpr * scale, dpr * scale);
 
     gameUi.style.display = 'none';
     gameRunning = true;
