@@ -3,6 +3,7 @@ const c = canvas.getContext('2d');
 
 const dpr = window.devicePixelRatio || 1
 
+c.setTransform(1, 0, 0, 1, 0, 0);
 c.scale(dpr, dpr)
 
 const scoreEl = document.getElementById('scoreEl')
@@ -255,6 +256,11 @@ function createImage(src) {
 
 function init() {
     cancelAnimationFrame(animationId)
+
+    const scale = Math.min(window.innerWidth / logicalWidth, 1);
+
+    canvas.style.width = logicalWidth * scale + "px";
+    canvas.style.height = logicalHeight * scale + "px";
 
     gameUi.style.display = 'none';
     gameRunning = true;
