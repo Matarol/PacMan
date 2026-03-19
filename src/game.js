@@ -23,6 +23,7 @@ let player
 let score = 0
 let animationId
 let gameRunning = true
+let winCount = 0
 
 const keys = {
     w: { pressed: false },
@@ -237,8 +238,25 @@ function init() {
             },
             color: 'red',
             context: c
-        })
+        })        
     ]
+
+    if (winCount > 1) {
+        ghosts.push(
+            new Ghost({
+            position: {
+                x: 6 * Boundary.width + Boundary.width / 2,
+                y: 6 * Boundary.height + Boundary.height / 2
+            },
+            velocity: {
+                x: Ghost.speed,
+                y: 0
+            },
+            color: 'pink',
+            context: c
+        })    
+        )
+    }
 
     player = new Player({
         position: {
@@ -350,6 +368,7 @@ function animate() {
                 statusText.innerText = 'You lose!'
                 statusText.style.color = 'red'
                 gameUi.style.display = 'block'
+                winCount = 0
                 console.log('You lose')
             }
         }
@@ -363,7 +382,8 @@ function animate() {
         statusText.innerText = 'You win!'
         statusText.style.color = 'white'
         gameUi.style.display = 'block'
-        console.log('You win')
+        winCount += 1
+        console.log('You win, win streak: ', winCount)
     }
 
 
