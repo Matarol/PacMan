@@ -18,6 +18,7 @@ main {
 
 canvas {
     display: block;
+    width: 100%;
     /* Ta bort ev. position: absolute om det finns i CSS:en också */
 }
 
@@ -49,7 +50,7 @@ canvas {
         min-width: 350px;
     }
     main {
-        margin-left: 3px;
+        margin-left: 5px;
         justify-content: flex-start;
     }
 
