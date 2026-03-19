@@ -50,7 +50,6 @@ canvas {
         min-width: 350px;
     }
     main {
-        margin-left: 5px;
         justify-content: flex-start;
     }
 
