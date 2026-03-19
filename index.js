@@ -1,6 +1,10 @@
 ﻿const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
 
+const dpr = window.devicePixelRatio || 1
+
+c.scale(dpr, dpr)
+
 const scoreEl = document.getElementById('scoreEl')
 
 const gameUi = document.getElementById('gameUi')
@@ -230,8 +234,17 @@ const map = [
     ['4', '-', '-', '-', '-', '-', '-', '-', '-', '-', '3']
 ]
 
-canvas.width = map[0].length * Boundary.width;
-canvas.height = map.length * Boundary.height;
+const logicalWidth = map[0].length * Boundary.width;
+const logicalHeight = map.length * Boundary.height;
+
+canvas.style.width = logicalWidth + "px"
+canvas.style.height = logicalHeight + "px"
+
+canvas.width = logicalWidth * dpr
+canvas.height = logicalHeight * dpr
+
+// canvas.width = map[0].length * Boundary.width;
+// canvas.height = map.length * Boundary.height;
 
 function createImage(src) {
     const image = new Image()
