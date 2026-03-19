@@ -1,8 +1,15 @@
-﻿const canvas = document.getElementById('canvas1');
+﻿import { Player } from './player.js'
+import { Ghost } from './ghost.js'
+import { Boundary } from './boundary.js'
+import { Pellet } from './items.js'
+import { PowerUp } from './items.js'
+import { map, createImage } from './map.js'
+import { circleCollidesWithRectangle } from './utils.js'
+
+const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
 
 const scoreEl = document.getElementById('scoreEl')
-
 const gameUi = document.getElementById('gameUi')
 const statusText = document.getElementById('statusText')
 
@@ -17,194 +24,6 @@ let score = 0
 let animationId
 let gameRunning = true
 
-class Boundary {
-    static width = 40
-    static height = 40
-    constructor({position, image}) {
-        this.position = position
-        this.width = 40
-        this.height = 40
-        this.image = image
-    }
-
-    draw() {
-        // c.fillStyle = 'blue'
-        // c.fillRect(this.position.x, this.position.y, this.width, this.height)
-
-        c.drawImage(this.image, this.position.x, this.position.y)
-    }
-};
-
-class Player {
-    constructor({position, velocity}) {
-        this.position = position
-        this.velocity = velocity
-        this.radius = 15
-        this.radians = 0.75
-        this.openRate = 0.12
-        this.rotation = 0
-        this.eyesOffsetX = 3
-        this.eyesOffsetY = -6
-    }
-
-    draw() {
-        c.save()
-        c.translate(this.position.x, this.position.y)
-        c.rotate(this.rotation)
-        c.translate(-this.position.x, -this.position.y)
-        c.beginPath()
-        c.arc(this.position.x, this.position.y, this.radius, this.radians, Math.PI * 2 - this.radians)
-        c.lineTo(this.position.x, this.position.y)
-        c.fillStyle = 'yellow'
-        c.fill()
-        c.closePath()        
-        c.restore()
-
-        c.beginPath()
-        c.arc(this.position.x + this.eyesOffsetX, this.position.y + this.eyesOffsetY, 3, 0, Math.PI * 2)
-        c.closePath()
-        c.fillStyle = 'black'
-        c.fill()
-    }
-
-    update() {        
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
-
-        if (this.radians < 0 || this.radians > 0.75) this.openRate = -this.openRate
-        this.radians += this.openRate
-
-        if (this.velocity.x > 0) {
-            this.eyesOffsetX = 3
-            this.eyesOffsetY = -6
-        }
-        if (this.velocity.x < 0) {
-            this.eyesOffsetX = -3
-            this.eyesOffsetY = -6
-        }
-        if (this.velocity.y > 0) {
-            this.eyesOffsetX = 6
-            this.eyesOffsetY = 3
-        }
-        if (this.velocity.y < 0) {
-            this.eyesOffsetX = -6
-            this.eyesOffsetY = -3
-        }
-
-        this.draw()
-    }
-}
-
-class Ghost {
-    static speed = 2
-    constructor({position, velocity, color = 'green'}) {
-        this.position = position
-        this.velocity = velocity
-        this.radius = 15
-        this.color = color
-        this.prevCollisions = []
-        this.speed = 2
-        this.scared = false
-        this.eyesOffsetX = 0
-        this.eyesOffsetY = 0
-    }
-
-    draw() {
-        //Spökets kropp
-        c.beginPath()
-        c.arc(this.position.x, this.position.y, this.radius, Math.PI, 0)
-        c.lineTo(this.position.x + this.radius, this.position.y + this.radius)
-        for (let i = 0; i <= 4; i++) {
-            const waveWidth = this.radius / 2
-            c.lineTo(
-            this.position.x + this.radius - i * waveWidth,
-            this.position.y + this.radius + (i % 2 === 0 ? 5 : 0)
-            )
-        }
-        c.lineTo(this.position.x - this.radius, this.position.y)
-        c.fillStyle = this.scared ? 'blue' : this.color
-        c.fill()
-        c.closePath()
-
-        //Spökets ögon
-        c.beginPath()
-        c.arc(this.position.x + 5, this.position.y + 5, 3, Math.PI, 0)
-        c.lineTo(this.position.x + 8, this.position.y + 5)
-        c.arc(this.position.x + 5, this.position.y + 7, 3, 0, Math.PI)
-        c.closePath()
-        c.fillStyle = 'white'
-        c.fill()
-
-        c.beginPath()
-        c.arc(this.position.x + 5 + this.eyesOffsetX, this.position.y + 6 + this.eyesOffsetY, 2, 0, Math.PI * 2)
-        c.closePath()
-        c.fillStyle = 'black'
-        c.fill()        
-
-        c.beginPath()
-        c.arc(this.position.x + -5, this.position.y + 5, 3, Math.PI, 0)
-        c.lineTo(this.position.x -2, this.position.y + 5)
-        c.arc(this.position.x + -5, this.position.y + 7, 3, 0, Math.PI)
-        c.closePath()
-        c.fillStyle = 'white'
-        c.fill()
-
-        c.beginPath()
-        c.arc(this.position.x + -5 + this.eyesOffsetX, this.position.y + 6 + this.eyesOffsetY, 2, 0, Math.PI * 2)
-        c.closePath()
-        c.fillStyle = 'black'
-        c.fill()
-    }
-
-    update() {        
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
-
-        this.eyesOffsetX = 0
-        this.eyesOffsetY = 0
-
-        if (this.velocity.x > 0) this.eyesOffsetX = 1.5
-        else if (this.velocity.x < 0) this.eyesOffsetX = -1.5
-
-        if (this.velocity.y > 0) this.eyesOffsetY = 1.5
-        else if (this.velocity.y < 0) this.eyesOffsetY = -1.5
-
-        this.draw()
-    }
-}
-
-class Pellet {
-    constructor({position}) {
-        this.position = position
-        this.radius = 3
-    }
-
-    draw() {
-        c.beginPath()
-        c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2)
-        c.fillStyle = 'white'
-        c.fill()
-        c.closePath()
-    }
-
-}
-
-class PowerUp {
-    constructor({position}) {
-        this.position = position
-        this.radius = 8
-    }
-
-    draw() {
-        c.beginPath()
-        c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2)
-        c.fillStyle = 'white'
-        c.fill()
-        c.closePath()
-    }
-
-}
-
 const keys = {
     w: { pressed: false },
     a: { pressed: false },
@@ -213,41 +32,6 @@ const keys = {
 }
 
 let lastKey = ''
-
-const map = [
-    ['1', '-', '-', '-', '-', '-', '-', '-', '-', '-', '2'],
-    ['|', '.', '.', '.', '.', '.', '.', '.', '.', '.', '|'],    
-    ['|', '.', 'b', '.', '[', '7', ']', '.', 'b', '.', '|'],
-    ['|', '.', '.', '.', '.', '_', '.', '.', '.', '.', '|'],
-    ['|', '.', '[', ']', '.', '.', '.', '[', ']', '.', '|'],
-    ['|', '.', '.', '.', '.', '^', '.', '.', '.', '.', '|'],
-    ['|', '.', 'b', '.', '[', '+', ']', '.', 'b', '.', '|'],
-    ['|', '.', '.', '.', '.', '_', '.', '.', '.', '.', '|'],
-    ['|', '.', '[', ']', '.', '.', '.', '[', ']', '.', '|'],
-    ['|', '.', '.', '.', '.', '^', '.', '.', '.', '.', '|'],
-    ['|', '.', 'b', '.', '[', '5', ']', '.', 'b', '.', '|'],
-    ['|', '.', '.', '.', '.', '.', '.', '.', '.', 'p', '|'],    
-    ['4', '-', '-', '-', '-', '-', '-', '-', '-', '-', '3']
-]
-
-// const logicalWidth = map[0].length * Boundary.width;
-// const logicalHeight = map.length * Boundary.height;
-
-// canvas.style.width = logicalWidth + "px"
-// canvas.style.height = logicalHeight + "px"
-
-// canvas.width = logicalWidth * dpr
-// canvas.height = logicalHeight * dpr
-
-// canvas.width = map[0].length * Boundary.width;
-// canvas.height = map.length * Boundary.height;
-
-function createImage(src) {
-    const image = new Image()
-    image.src = src
-    return image
-}
-
 
 function init() {
     cancelAnimationFrame(animationId)
@@ -288,7 +72,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/pipeHorizontal.png')
+                    image: createImage('../assets/img/pipeHorizontal.png'),
+                    context: c
                 }))
                 break
                 case '|': boundaries.push(new Boundary({
@@ -296,7 +81,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/pipeVertical.png')
+                    image: createImage('../assets/img/pipeVertical.png'),
+                    context: c
                 }))
                 break
                 case '1': boundaries.push(new Boundary({
@@ -304,7 +90,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/pipeCorner1.png')
+                    image: createImage('../assets/img/pipeCorner1.png'),
+                    context: c
                 }))
                 break
                 case '2': boundaries.push(new Boundary({
@@ -312,7 +99,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/pipeCorner2.png')
+                    image: createImage('../assets/img/pipeCorner2.png'),
+                    context: c
                 }))
                 break
                 case '3': boundaries.push(new Boundary({
@@ -320,7 +108,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/pipeCorner3.png')
+                    image: createImage('../assets/img/pipeCorner3.png'),
+                    context: c
                 }))
                 break
                 case '4': boundaries.push(new Boundary({
@@ -328,7 +117,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/pipeCorner4.png')
+                    image: createImage('../assets/img/pipeCorner4.png'),
+                    context: c
                 }))
                 break
                 case 'b': boundaries.push(new Boundary({
@@ -336,7 +126,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/block.png')
+                    image: createImage('../assets/img/block.png'),
+                    context: c
                 }))
                 break
                 case '[': boundaries.push(new Boundary({
@@ -344,7 +135,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/capLeft.png')
+                    image: createImage('../assets/img/capLeft.png'),
+                    context: c
                 }))
                 break
                 case '7': boundaries.push(new Boundary({
@@ -352,7 +144,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/pipeConnectorBottom.png')
+                    image: createImage('../assets/img/pipeConnectorBottom.png'),
+                    context: c
                 }))
                 break
                 case ']': boundaries.push(new Boundary({
@@ -360,7 +153,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/capRight.png')
+                    image: createImage('../assets/img/capRight.png'),
+                    context: c
                 }))
                 break
                 case '_': boundaries.push(new Boundary({
@@ -368,7 +162,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/capBottom.png')
+                    image: createImage('../assets/img/capBottom.png'),
+                    context: c
                 }))
                 break
                 case '^': boundaries.push(new Boundary({
@@ -376,7 +171,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/capTop.png')
+                    image: createImage('../assets/img/capTop.png'),
+                    context: c
                 }))
                 break
                 case '+': boundaries.push(new Boundary({
@@ -384,7 +180,8 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/pipeCross.png')
+                    image: createImage('../assets/img/pipeCross.png'),
+                    context: c
                 }))
                 break
                 case '5': boundaries.push(new Boundary({
@@ -392,21 +189,24 @@ function init() {
                         x: Boundary.width * j,
                         y: Boundary.height * i
                     },
-                    image: createImage('./img/pipeConnectorTop.png')
+                    image: createImage('../assets/img/pipeConnectorTop.png'),
+                    context: c
                 }))
                 break
                 case '.': pellets.push(new Pellet({
                     position: {
                         x: Boundary.width * j + Boundary.width / 2,
                         y: Boundary.height * i + Boundary.height / 2
-                    }
+                    },
+                    context: c
                 }))
                 break
                 case 'p': powerUps.push(new PowerUp({
                     position: {
                         x: Boundary.width * j + Boundary.width / 2,
                         y: Boundary.height * i + Boundary.height / 2
-                    }
+                    },
+                    context: c
                 }))
                 break
             }
@@ -422,7 +222,8 @@ function init() {
             velocity: {
                 x: Ghost.speed,
                 y: 0
-            }
+            },
+            context: c
         }),
 
         new Ghost({
@@ -434,7 +235,8 @@ function init() {
                 x: Ghost.speed,
                 y: 0
             },
-            color: 'red'
+            color: 'red',
+            context: c
         })
     ]
 
@@ -446,17 +248,10 @@ function init() {
         velocity: {
             x: 0,
             y: 0
-        }
+        },
+            context: c
     })
     animate()
-}
-
-function circleCollidesWithRectangle({
-    circle,
-    rectangle
-}) {
-    const padding = Boundary.width / 2 - circle.radius - 1
-    return (circle.position.y - circle.radius + circle.velocity.y <= rectangle.position.y + rectangle.height + padding && circle.position.x + circle.radius + circle.velocity.x >= rectangle.position.x - padding && circle.position.y + circle.radius + circle.velocity.y >= rectangle.position.y - padding && circle.position.x - circle.radius + circle.velocity.x <= rectangle.position.x + rectangle.width + padding)
 }
 
 function animate() {
