@@ -246,7 +246,7 @@ function init() {
             new Ghost({
             position: {
                 x: 6 * Boundary.width + Boundary.width / 2,
-                y: 6 * Boundary.height + Boundary.height / 2
+                y: 3 * Boundary.height + Boundary.height / 2
             },
             velocity: {
                 x: Ghost.speed,
