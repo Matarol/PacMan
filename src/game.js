@@ -246,7 +246,7 @@ function init() {
             new Ghost({
             position: {
                 x: 6 * Boundary.width + Boundary.width / 2,
-                y: 3 * Boundary.height + Boundary.height / 2
+                y: 5 * Boundary.height + Boundary.height / 2
             },
             velocity: {
                 x: Ghost.speed,
@@ -446,7 +446,7 @@ function animate() {
                 !collisions.includes('right') &&
                 circleCollidesWithRectangle({
                     circle: {...ghost, velocity: {
-                        x: ghost.speed,
+                        x: Ghost.speed,
                         y: 0
                     }
                 },
@@ -460,7 +460,7 @@ function animate() {
             !collisions.includes('left') &&
                 circleCollidesWithRectangle({
                     circle: {...ghost, velocity: {
-                        x: -ghost.speed,
+                        x: -Ghost.speed,
                         y: 0
                     }
                 },
@@ -475,7 +475,7 @@ function animate() {
                 circleCollidesWithRectangle({
                     circle: {...ghost, velocity: {
                         x: 0,
-                        y: ghost.speed
+                        y: Ghost.speed
                     }
                 },
                 rectangle: boundary
@@ -489,7 +489,7 @@ function animate() {
                 circleCollidesWithRectangle({
                     circle: {...ghost, velocity: {
                         x: 0,
-                        y: -ghost.speed
+                        y: -Ghost.speed
                     }
                 },
                 rectangle: boundary
@@ -520,23 +520,23 @@ function animate() {
 
             switch (direction) {
                 case 'down':
-                    ghost.velocity.y = ghost.speed
+                    ghost.velocity.y = Ghost.speed
                     ghost.velocity.x = 0
                     break
 
                 case 'up':
-                    ghost.velocity.y = -ghost.speed
+                    ghost.velocity.y = -Ghost.speed
                     ghost.velocity.x = 0
                     break
 
                 case 'left':
                     ghost.velocity.y = 0
-                    ghost.velocity.x = -ghost.speed
+                    ghost.velocity.x = -Ghost.speed
                     break
 
                 case 'right':
                     ghost.velocity.y = 0
-                    ghost.velocity.x = ghost.speed
+                    ghost.velocity.x = Ghost.speed
                     break
             }
             ghost.prevCollisions = []
