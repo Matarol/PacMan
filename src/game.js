@@ -5,6 +5,7 @@ import { Pellet } from './items.js'
 import { PowerUp } from './items.js'
 import { map, createImage } from './map.js'
 import { circleCollidesWithRectangle } from './utils.js'
+import { handlePlayerMovement } from './playerController.js'
 
 const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
@@ -32,7 +33,9 @@ const keys = {
     d: { pressed: false }
 }
 
-let lastKey = ''
+// let lastKey = ''
+let currentDirection = null
+let nextDirection = null
 
 function init() {
     cancelAnimationFrame(animationId)
@@ -276,88 +279,14 @@ function animate() {
     animationId = requestAnimationFrame(animate)
     c.clearRect(0, 0, canvas.width, canvas.height)
 
-    if (keys.w.pressed && lastKey === 'w') {
-        for (let i = 0; i < boundaries.length; i++) {
-            const boundary = boundaries[i]
-            if (
-                circleCollidesWithRectangle({
-                    circle: {...player, velocity: {
-                        x: 0,
-                        y: -5
-                    }
-                },
-                rectangle: boundary
-            })
-        )   {
-            player.velocity.y = 0
-            break
-            } else {
-                player.velocity.y = -5
-            }
-        }
-    
-    } else if (keys.a.pressed && lastKey === 'a') {
-        for (let i = 0; i < boundaries.length; i++) {
-            const boundary = boundaries[i]
-            if (
-                circleCollidesWithRectangle({
-                    circle: {...player, velocity: {
-                        x: -5,
-                        y: 0
-                    }
-                },
-                rectangle: boundary
-            })
-        )   {
-            player.velocity.x = 0
-            break
-            } else {
-                player.velocity.x = -5
-            }
-        }
-    } else if (keys.s.pressed && lastKey === 's') {
-        for (let i = 0; i < boundaries.length; i++) {
-            const boundary = boundaries[i]
-            if (
-                circleCollidesWithRectangle({
-                    circle: {...player, velocity: {
-                        x: 0,
-                        y: 5
-                    }
-                },
-                rectangle: boundary
-            })
-        )   {
-            player.velocity.y = 0
-            break
-            } else {
-                player.velocity.y = 5
-            }
-        }
-    } else if (keys.d.pressed && lastKey === 'd') {
-        for (let i = 0; i < boundaries.length; i++) {
-            const boundary = boundaries[i]
-            if (
-                circleCollidesWithRectangle({
-                    circle: {...player, velocity: {
-                        x: 5,
-                        y: 0
-                    }
-                },
-                rectangle: boundary
-            })
-        )   {
-            player.velocity.x = 0
-            break
-            } else {
-                player.velocity.x = 5
-            }
-        }
-    }
+    const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries)
+
+    currentDirection = result.currentDirection
+    nextDirection = result.nextDirection
 
     // Spelare krockar med spöke
     for (let i = ghosts.length -1; 0 <= i; i--) {
-        const ghost = ghosts[i]
+         const ghost = ghosts[i]
 
         if (Math.hypot(ghost.position.x - player.position.x, ghost.position.y - player.position.y) < ghost.radius + player.radius) {
             if (ghost.scared) {
@@ -554,16 +483,16 @@ init()
 addEventListener('keydown', ({key}) => {
     switch (key) {
         case 'ArrowUp': keys.w.pressed = true
-        lastKey = 'w'
+        nextDirection = 'w'
         break
         case 'ArrowLeft': keys.a.pressed = true
-        lastKey = 'a'
+        nextDirection = 'a'
         break
         case 'ArrowDown': keys.s.pressed = true
-        lastKey = 's'
+        nextDirection = 's'
         break
         case 'ArrowRight': keys.d.pressed = true
-        lastKey = 'd'
+        nextDirection = 'd'
         break
     }
 })
@@ -592,7 +521,7 @@ mobileButtons.forEach(button => {
         e.preventDefault()
         const key = button.getAttribute('data-key')
         keys[key].pressed = true
-        lastKey = key
+        nextDirection = key
     })
 
     button.addEventListener('touchend', (e) => {
@@ -603,7 +532,7 @@ mobileButtons.forEach(button => {
     button.addEventListener('mousedown', (e) => {
         const key = button.getAttribute('data-key')
         keys[key].pressed = true
-        lastKey = key
+        nextDirection = key
     })
 
     button.addEventListener('mouseup', (e) => {
