@@ -3,9 +3,12 @@ import { Ghost } from './ghost.js'
 import { Boundary } from './boundary.js'
 import { Pellet } from './items.js'
 import { PowerUp } from './items.js'
-import { map, createImage } from './map.js'
-import { circleCollidesWithRectangle } from './utils.js'
+import { map, createImage, renderMap } from './map.js'
+import { circleCollidesWithRectangle } from './collision.js'
 import { handlePlayerMovement } from './playerController.js'
+import { updateGhosts } from './ghostController.js'
+import { updateItems } from './itemsController.js'
+import { resolvePlayerGhostCollision, checkWin } from './gameState.js'
 
 const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
@@ -21,7 +24,7 @@ let powerUps = []
 let boundaries = []
 let ghosts = []
 let player
-let score = 0
+let score = { value: 0 }
 let animationId
 let gameRunning = true
 let winCount = 0
@@ -33,7 +36,6 @@ const keys = {
     d: { pressed: false }
 }
 
-// let lastKey = ''
 let currentDirection = null
 let nextDirection = null
 
@@ -61,161 +63,14 @@ function init() {
 
     gameUi.style.display = 'none';
     gameRunning = true;
-    score = 0;
-    scoreEl.innerText = score;
+    score.value = 0;
+    scoreEl.innerText = score.value;
 
     boundaries.length = 0;
     pellets.length = 0;
     powerUps.length = 0;
 
-    map.forEach((row, i) => {
-        row.forEach((symbol, j) => {
-            switch (symbol) {
-                case '-': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/pipeHorizontal.png'),
-                    context: c
-                }))
-                break
-                case '|': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/pipeVertical.png'),
-                    context: c
-                }))
-                break
-                case '1': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/pipeCorner1.png'),
-                    context: c
-                }))
-                break
-                case '2': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/pipeCorner2.png'),
-                    context: c
-                }))
-                break
-                case '3': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/pipeCorner3.png'),
-                    context: c
-                }))
-                break
-                case '4': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/pipeCorner4.png'),
-                    context: c
-                }))
-                break
-                case 'b': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/block.png'),
-                    context: c
-                }))
-                break
-                case '[': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/capLeft.png'),
-                    context: c
-                }))
-                break
-                case '7': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/pipeConnectorBottom.png'),
-                    context: c
-                }))
-                break
-                case ']': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/capRight.png'),
-                    context: c
-                }))
-                break
-                case '_': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/capBottom.png'),
-                    context: c
-                }))
-                break
-                case '^': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/capTop.png'),
-                    context: c
-                }))
-                break
-                case '+': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/pipeCross.png'),
-                    context: c
-                }))
-                break
-                case '5': boundaries.push(new Boundary({
-                    position: {
-                        x: Boundary.width * j,
-                        y: Boundary.height * i
-                    },
-                    image: createImage('../assets/img/pipeConnectorTop.png'),
-                    context: c
-                }))
-                break
-                case '.': pellets.push(new Pellet({
-                    position: {
-                        x: Boundary.width * j + Boundary.width / 2,
-                        y: Boundary.height * i + Boundary.height / 2
-                    },
-                    context: c
-                }))
-                break
-                case 'p': powerUps.push(new PowerUp({
-                    position: {
-                        x: Boundary.width * j + Boundary.width / 2,
-                        y: Boundary.height * i + Boundary.height / 2
-                    },
-                    context: c
-                }))
-                break
-            }
-        })
-    })
+    renderMap({c, pellets, powerUps, boundaries})
 
     ghosts = [
         new Ghost({
@@ -284,28 +139,19 @@ function animate() {
     currentDirection = result.currentDirection
     nextDirection = result.nextDirection
 
-    // Spelare krockar med spöke
-    for (let i = ghosts.length -1; 0 <= i; i--) {
-         const ghost = ghosts[i]
+    const collisionResult = resolvePlayerGhostCollision(player, ghosts)
 
-        if (Math.hypot(ghost.position.x - player.position.x, ghost.position.y - player.position.y) < ghost.radius + player.radius) {
-            if (ghost.scared) {
-                ghosts.splice(i, 1)
-            } else {
-                cancelAnimationFrame(animationId)
-                gameRunning = false
-                statusText.innerText = 'You lose!'
-                statusText.style.color = 'red'
-                gameUi.style.display = 'block'
-                winCount = 0
-                console.log('You lose')
-            }
-        }
-
+    if (collisionResult.result === 'player_dead') {
+        cancelAnimationFrame(animationId)
+        gameRunning = false
+        statusText.innerText = 'You lose!'
+        statusText.style.color = 'red'
+        gameUi.style.display = 'block'
+        winCount = 0
     }
 
     // Vilkor för vinst
-    if (pellets.length === 0) {
+    if (checkWin(pellets)) {
         cancelAnimationFrame(animationId)
         gameRunning = false
         statusText.innerText = 'You win!'
@@ -315,41 +161,8 @@ function animate() {
         console.log('You win, win streak: ', winCount)
     }
 
-
-    // Spelare krockar med powerUps
-    for (let i = powerUps.length - 1; 0 <= i; i-- ) {
-        const powerUp = powerUps[i]
-        powerUp.draw()
-
-        if (Math.hypot(powerUp.position.x - player.position.x, powerUp.position.y - player.position.y) < powerUp.radius + player.radius) {
-            powerUps.splice(i, 1)
-
-            //Spöken blir skrämda
-            ghosts.forEach(ghost => {
-                ghost.scared = true
-
-                setTimeout(() => {
-                    ghost.scared = false
-                },
-            4000)
-            })
-
-        }
-    }
-
-    // Krockar med pellets
-    for (let i = pellets.length - 1; 0 <= i; i-- ) {
-        const pellet = pellets[i]
+    updateItems({player, pellets, powerUps, ghosts, score, scoreEl})
     
-        pellet.draw()
-
-        if (Math.hypot(pellet.position.x - player.position.x, pellet.position.y - player.position.y) < pellet.radius + player.radius) {
-            pellets.splice(i, 1)
-            score += 10
-            scoreEl.innerText = score
-        }
-    }
-
     boundaries.forEach((boundary) => {
         boundary.draw()
 
@@ -359,119 +172,14 @@ function animate() {
         })) {
             player.velocity.x = 0
             player.velocity.y = 0
-        }
-     
+        }     
     })
 
     player.update()
 
     // Spelare krockar med spöke
-    ghosts.forEach(ghost => {
-        ghost.update()        
-
-        const collisions = []
-        boundaries.forEach(boundary => {
-            if (
-                !collisions.includes('right') &&
-                circleCollidesWithRectangle({
-                    circle: {...ghost, velocity: {
-                        x: Ghost.speed,
-                        y: 0
-                    }
-                },
-                rectangle: boundary
-            })
-        ) {
-            collisions.push('right')
-        }
-
-        if (
-            !collisions.includes('left') &&
-                circleCollidesWithRectangle({
-                    circle: {...ghost, velocity: {
-                        x: -Ghost.speed,
-                        y: 0
-                    }
-                },
-                rectangle: boundary
-            })
-        ) {
-            collisions.push('left')
-        }
-
-        if (
-            !collisions.includes('down') &&
-                circleCollidesWithRectangle({
-                    circle: {...ghost, velocity: {
-                        x: 0,
-                        y: Ghost.speed
-                    }
-                },
-                rectangle: boundary
-            })
-        ) {
-            collisions.push('down')
-        }
-
-        if (
-            !collisions.includes('up') &&
-                circleCollidesWithRectangle({
-                    circle: {...ghost, velocity: {
-                        x: 0,
-                        y: -Ghost.speed
-                    }
-                },
-                rectangle: boundary
-            })
-        ) {
-            collisions.push('up')
-        }
-        })
-        if (collisions.length > ghost.prevCollisions.length)
-            ghost.prevCollisions = collisions
-
-        if (JSON.stringify(collisions) !== JSON.stringify(ghost.prevCollisions)) {
-
-            if (ghost.velocity.x > 0)
-                ghost.prevCollisions.push('right')
-            else if (ghost.velocity.x < 0)
-                ghost.prevCollisions.push('left')
-            else if (ghost.velocity.y > 0)
-                ghost.prevCollisions.push('down')
-            else if (ghost.velocity.y < 0)
-                ghost.prevCollisions.push('up')
-
-            const pathways = ghost.prevCollisions.filter(collision => {
-                return !collisions.includes(collision)
-            })
-
-            const direction = pathways[Math.floor(Math.random() * pathways.length)]
-
-            switch (direction) {
-                case 'down':
-                    ghost.velocity.y = Ghost.speed
-                    ghost.velocity.x = 0
-                    break
-
-                case 'up':
-                    ghost.velocity.y = -Ghost.speed
-                    ghost.velocity.x = 0
-                    break
-
-                case 'left':
-                    ghost.velocity.y = 0
-                    ghost.velocity.x = -Ghost.speed
-                    break
-
-                case 'right':
-                    ghost.velocity.y = 0
-                    ghost.velocity.x = Ghost.speed
-                    break
-            }
-            ghost.prevCollisions = []
-        }
-    })
-
+    updateGhosts(ghosts, boundaries, player)
+    
     if (player.velocity.x > 0) player.rotation = 0
     else if (player.velocity.x < 0) player.rotation = Math.PI
     else if (player.velocity.y > 0) player.rotation = Math.PI / 2
