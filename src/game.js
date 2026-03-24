@@ -1,4 +1,5 @@
-﻿import { Player } from './player.js'
+﻿import { showMenu } from './menu.js'
+import { Player } from './player.js'
 import { Ghost } from './ghost.js'
 import { Boundary } from './boundary.js'
 import { map, renderMap } from './map.js'
@@ -142,9 +143,11 @@ function animate() {
     if (collisionResult.result === 'player_dead') {
         cancelAnimationFrame(animationId)
         gameRunning = false
-        statusText.innerText = 'You lose!'
-        statusText.style.color = 'red'
-        gameUi.style.display = 'block'
+
+        showMenu('GAMEOVER',
+            { startGame: init },
+            { won: false, score: score.value }        
+        )
         winCount = 0
     }
 
@@ -152,11 +155,13 @@ function animate() {
     if (checkWin(pellets)) {
         cancelAnimationFrame(animationId)
         gameRunning = false
-        statusText.innerText = 'You win!'
-        statusText.style.color = 'white'
-        gameUi.style.display = 'block'
+
+        showMenu('GAMEOVER',
+            { startGame: init },
+            { won: true, score: score.value }
+        )
+        
         winCount += 1
-        console.log('You win, win streak: ', winCount)
     }
 
     updateItems({player, pellets, powerUps, ghosts, score, scoreEl})
@@ -184,7 +189,7 @@ function animate() {
     else if (player.velocity.y < 0) player.rotation = Math.PI * 1.5
 } //end of animate
 
-init()
+// init()
 
 addEventListener('keydown', ({key}) => {
     switch (key) {
@@ -246,3 +251,6 @@ mobileButtons.forEach(button => {
         keys[key].pressed = false
     })
 })
+
+showMenu('START', { startGame: init })
+console.log("Om det här skrivs ut borde det andra funka.")

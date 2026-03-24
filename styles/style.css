@@ -1,4 +1,8 @@
-﻿body {
+﻿* {
+    font-family: sans-serif;
+}
+
+body {
     margin: 0;
     background-color: black;
     display: flex;         /* Lägg flex även här för säkerhets skull */
@@ -20,6 +24,38 @@ canvas {
     display: block;
     width: 100%;
     /* Ta bort ev. position: absolute om det finns i CSS:en också */
+}
+
+#ui-overlay {
+    position: absolute;
+    justify-content: center;
+    text-align: center;
+    padding: 15px;
+    gap: 15px;
+    margin: 15px;
+    color: aliceblue;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    border: 10px solid rgba(255, 61, 255, 0.5);
+    border-radius: 15px;
+    box-shadow: 0px 5px 15px 5px rgba(255, 61, 255, 0.5), inset 0px 5px 15px 5px rgba(255, 61, 255, 0.5);
+    width: 350px;
+    height: auto;
+    z-index: 1000;
+}
+
+#menu-buttons button{
+    margin: 15px;
+    color: white;
+    background-color: rgba(255, 61, 255, 0.5);
+    /* border: 2px solid rgba(255, 61, 255, 0.5); */
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+}
+
+.hidden {
+    display: none !important;
 }
 
 #mobileControls {
