@@ -1,9 +1,7 @@
 ﻿import { Player } from './player.js'
 import { Ghost } from './ghost.js'
 import { Boundary } from './boundary.js'
-import { Pellet } from './items.js'
-import { PowerUp } from './items.js'
-import { map, createImage, renderMap } from './map.js'
+import { map, renderMap } from './map.js'
 import { circleCollidesWithRectangle } from './collision.js'
 import { handlePlayerMovement } from './playerController.js'
 import { updateGhosts } from './ghostController.js'
@@ -64,7 +62,7 @@ function init() {
     gameUi.style.display = 'none';
     gameRunning = true;
     score.value = 0;
-    scoreEl.innerText = score.value;
+    scoreEl.innerText = score;
 
     boundaries.length = 0;
     pellets.length = 0;
