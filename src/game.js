@@ -13,6 +13,8 @@ const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
 
 const scoreEl = document.getElementById('scoreEl')
+const streakScoreEl = document.getElementById('streakScoreEl')
+const highScoreEl = document.getElementById('highScoreEl')
 const gameUi = document.getElementById('gameUi')
 const statusText = document.getElementById('statusText')
 
@@ -24,6 +26,8 @@ let boundaries = []
 let ghosts = []
 let player
 let score = { value: 0 }
+let streakScore = { value: 0 }
+let highScore = { value: 0 }
 let animationId
 let gameRunning = true
 let winCount = 0
@@ -38,9 +42,7 @@ const keys = {
 let currentDirection = null
 let nextDirection = null
 
-function init() {
-    cancelAnimationFrame(animationId)
-
+async function drawStaticMap() {
     const dpr = window.devicePixelRatio || 1;
 
     const logicalWidth = map[0].length * Boundary.width;
@@ -60,16 +62,32 @@ function init() {
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.scale(dpr * scale, dpr * scale);
 
-    gameUi.style.display = 'none';
-    gameRunning = true;
-    score.value = 0;
-    scoreEl.innerText = score;
-
     boundaries.length = 0;
     pellets.length = 0;
     powerUps.length = 0;
 
     renderMap({c, pellets, powerUps, boundaries})
+
+    const imagePromises = boundaries.map(b => b.image).filter(img => img instanceof HTMLImageElement).map(img => img.decode().catch(() => {}))
+
+    await Promise.all(imagePromises)
+
+    c.clearRect(0, 0, canvas.width, canvas.height)
+    boundaries.forEach(boundary => boundary.draw())
+    pellets.forEach(pellet => pellet.draw())
+    powerUps.forEach(powerUp => powerUp.draw())
+}
+
+function init() {
+    cancelAnimationFrame(animationId)
+
+    drawStaticMap()
+
+    gameUi.style.display = 'none'
+    gameRunning = true
+    score.value = 0
+    scoreEl.innerText = score.value
+    streakScoreEl.innerText = streakScore.value
 
     ghosts = [
         new Ghost({
@@ -143,10 +161,11 @@ function animate() {
     if (collisionResult.result === 'player_dead') {
         cancelAnimationFrame(animationId)
         gameRunning = false
+        highScore.value = streakScore.value + score.value
 
         showMenu('GAMEOVER',
             { startGame: init },
-            { won: false, score: score.value }        
+            { won: false, score: highScore.value }        
         )
         winCount = 0
     }
@@ -160,7 +179,7 @@ function animate() {
             { startGame: init },
             { won: true, score: score.value }
         )
-        
+        streakScore.value += score.value
         winCount += 1
     }
 
@@ -188,8 +207,6 @@ function animate() {
     else if (player.velocity.y > 0) player.rotation = Math.PI / 2
     else if (player.velocity.y < 0) player.rotation = Math.PI * 1.5
 } //end of animate
-
-// init()
 
 addEventListener('keydown', ({key}) => {
     switch (key) {
@@ -252,5 +269,7 @@ mobileButtons.forEach(button => {
     })
 })
 
-showMenu('START', { startGame: init })
-console.log("Om det här skrivs ut borde det andra funka.")
+window.onload = () => {
+    drawStaticMap()
+    showMenu('START', { startGame: init })
+}

@@ -24,8 +24,8 @@ export function updateItems({player, pellets, powerUps, ghosts, score, scoreEl})
 
         if (circleCollidesWithCircle(pellet, player)) {
             pellets.splice(i, 1)
-            score += 10
-            scoreEl.innerText = score
+            score.value += 10
+            scoreEl.innerText = score.value
         }
     }
 

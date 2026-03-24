@@ -23,7 +23,7 @@ export const showMenu = (state, callbacks, options = {}) => {
 
         GAMEOVER: {
             title: options.won ? "Du vann!" : "Du förlorade!",
-            content: `Poäng ${options.score || 0}`,
+            content: `Poäng: ${options.score}`,
             buttons: [{
                 text: options.won ? "Starta nästa nivå" : "Spela igen",
                 action: callbacks.startGame
