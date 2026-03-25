@@ -8,6 +8,7 @@ import { handlePlayerMovement } from './playerController.js'
 import { updateGhosts } from './ghostController.js'
 import { updateItems } from './itemsController.js'
 import { resolvePlayerGhostCollision, checkWin } from './gameState.js'
+import { setupInput } from './inputHandler.js'
 
 const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
@@ -15,7 +16,6 @@ const c = canvas.getContext('2d');
 const scoreEl = document.getElementById('scoreEl')
 const streakScoreEl = document.getElementById('streakScoreEl')
 const highScoreEl = document.getElementById('highScoreEl')
-const gameUi = document.getElementById('gameUi')
 
 const mobileButtons = document.querySelectorAll('#mobileControls button')
 
@@ -82,7 +82,6 @@ async function init() {
 
     await drawStaticMap()
 
-    gameUi.style.display = 'none'
     gameRunning = true
     score.value = 0
     scoreEl.innerText = score.value
@@ -215,69 +214,74 @@ function animate() {
     else if (player.velocity.y < 0) player.rotation = Math.PI * 1.5
 } //end of animate
 
-addEventListener('keydown', ({key}) => {
-    switch (key) {
-        case 'ArrowUp': keys.w.pressed = true
-        nextDirection = 'w'
-        break
-        case 'ArrowLeft': keys.a.pressed = true
-        nextDirection = 'a'
-        break
-        case 'ArrowDown': keys.s.pressed = true
-        nextDirection = 's'
-        break
-        case 'ArrowRight': keys.d.pressed = true
-        nextDirection = 'd'
-        break
-    }
-})
+// addEventListener('keydown', ({key}) => {
+//     switch (key) {
+//         case 'ArrowUp': keys.w.pressed = true
+//         nextDirection = 'w'
+//         break
+//         case 'ArrowLeft': keys.a.pressed = true
+//         nextDirection = 'a'
+//         break
+//         case 'ArrowDown': keys.s.pressed = true
+//         nextDirection = 's'
+//         break
+//         case 'ArrowRight': keys.d.pressed = true
+//         nextDirection = 'd'
+//         break
+//     }
+// })
 
-addEventListener('keyup', ({key}) => {
-    switch (key) {
-        case 'ArrowUp': keys.w.pressed = false
-        break
-        case 'ArrowLeft': keys.a.pressed = false
-        break
-        case 'ArrowDown': keys.s.pressed = false
-        break
-        case 'ArrowRight': keys.d.pressed = false
-        break
-    }
-})
+// addEventListener('keyup', ({key}) => {
+//     switch (key) {
+//         case 'ArrowUp': keys.w.pressed = false
+//         break
+//         case 'ArrowLeft': keys.a.pressed = false
+//         break
+//         case 'ArrowDown': keys.s.pressed = false
+//         break
+//         case 'ArrowRight': keys.d.pressed = false
+//         break
+//     }
+// })
 
-addEventListener('keydown', (e) => {
-    if (e.key === ' ' && !gameRunning) {
-        init();
-    }
-})
+// addEventListener('keydown', (e) => {
+//     if (e.key === ' ' && !gameRunning) {
+//         init();
+//     }
+// })
 
-mobileButtons.forEach(button => {
-    button.addEventListener('touchstart', (e) => {
-        e.preventDefault()
-        const key = button.getAttribute('data-key')
-        keys[key].pressed = true
-        nextDirection = key
-    })
+// mobileButtons.forEach(button => {
+//     button.addEventListener('touchstart', (e) => {
+//         e.preventDefault()
+//         const key = button.getAttribute('data-key')
+//         keys[key].pressed = true
+//         nextDirection = key
+//     })
 
-    button.addEventListener('touchend', (e) => {
-        const key = button.getAttribute('data-key')
-        keys[key].pressed = false
-    })
+//     button.addEventListener('touchend', (e) => {
+//         const key = button.getAttribute('data-key')
+//         keys[key].pressed = false
+//     })
 
-    button.addEventListener('mousedown', (e) => {
-        const key = button.getAttribute('data-key')
-        keys[key].pressed = true
-        nextDirection = key
-    })
+//     button.addEventListener('mousedown', (e) => {
+//         const key = button.getAttribute('data-key')
+//         keys[key].pressed = true
+//         nextDirection = key
+//     })
 
-    button.addEventListener('mouseup', (e) => {
-        const key = button.getAttribute('data-key')
-        keys[key].pressed = false
-    })
-})
+//     button.addEventListener('mouseup', (e) => {
+//         const key = button.getAttribute('data-key')
+//         keys[key].pressed = false
+//     })
+// })
 
 window.onload = () => {
     drawStaticMap()
     highScoreEl.innerText = localStorage.getItem('pacman-highscore') || 0
     showMenu('START', { startGame: init })
 }
+
+setupInput({
+    setNextDirection: (dir) => { nextDirection = dir },
+    isGameRunning: () => gameRunning
+});
