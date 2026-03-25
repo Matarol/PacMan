@@ -26,6 +26,14 @@ canvas {
     /* Ta bort ev. position: absolute om det finns i CSS:en också */
 }
 
+span {
+    font-size: 16px;
+}
+
+.span-number {
+    padding-right: 20px;
+}
+
 #ui-overlay {
     position: absolute;
     justify-content: center;
@@ -36,22 +44,35 @@ canvas {
     color: aliceblue;
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
-    border: 10px solid rgba(255, 61, 255, 0.5);
+    border: 5px solid rgba(255, 61, 255, 0.5);
     border-radius: 15px;
-    box-shadow: 0px 5px 15px 5px rgba(255, 61, 255, 0.5), inset 0px 5px 15px 5px rgba(255, 61, 255, 0.5);
+    box-shadow: 0px 5px 15px 1px rgba(255, 61, 255, 0.5), inset 0px 5px 15px 1px rgba(255, 61, 255, 0.5);
     width: 350px;
     height: auto;
     z-index: 1000;
 }
 
-#menu-buttons button{
+button{
     margin: 15px;
     color: white;
     background-color: rgba(255, 61, 255, 0.5);
     /* border: 2px solid rgba(255, 61, 255, 0.5); */
+    box-shadow: 0px 5px 15px 1px rgba(255, 61, 255, 0.5);
     border: none;
     border-radius: 5px;
     padding: 10px 15px;
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    cursor: pointer;
+    background-color: rgba(255, 128, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+button:active {
+    background-color: rgba(235, 1, 235, 0.5);
+    transform: translateY(0px);
 }
 
 .hidden {

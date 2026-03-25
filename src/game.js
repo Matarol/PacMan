@@ -16,7 +16,6 @@ const scoreEl = document.getElementById('scoreEl')
 const streakScoreEl = document.getElementById('streakScoreEl')
 const highScoreEl = document.getElementById('highScoreEl')
 const gameUi = document.getElementById('gameUi')
-const statusText = document.getElementById('statusText')
 
 const mobileButtons = document.querySelectorAll('#mobileControls button')
 
@@ -27,7 +26,7 @@ let ghosts = []
 let player
 let score = { value: 0 }
 let streakScore = { value: 0 }
-let highScore = { value: 0 }
+let highScore = { value: localStorage.getItem('pacman-highscore') || 0 }
 let animationId
 let gameRunning = true
 let winCount = 0
@@ -78,16 +77,17 @@ async function drawStaticMap() {
     powerUps.forEach(powerUp => powerUp.draw())
 }
 
-function init() {
+async function init() {
     cancelAnimationFrame(animationId)
 
-    drawStaticMap()
+    await drawStaticMap()
 
     gameUi.style.display = 'none'
     gameRunning = true
     score.value = 0
     scoreEl.innerText = score.value
     streakScoreEl.innerText = streakScore.value
+    highScoreEl.innerText = highScore.value
 
     ghosts = [
         new Ghost({
@@ -161,12 +161,19 @@ function animate() {
     if (collisionResult.result === 'player_dead') {
         cancelAnimationFrame(animationId)
         gameRunning = false
-        highScore.value = streakScore.value + score.value
+
+        const finalScore = streakScore.value + score.value
+
+        if (finalScore > highScore.value) {
+            highScore.value = finalScore
+            localStorage.setItem('pacman-highscore', finalScore)
+        }
 
         showMenu('GAMEOVER',
             { startGame: init },
-            { won: false, score: highScore.value }        
+            { won: false, score: finalScore }        
         )
+        streakScore.value = 0
         winCount = 0
     }
 
@@ -271,5 +278,6 @@ mobileButtons.forEach(button => {
 
 window.onload = () => {
     drawStaticMap()
+    highScoreEl.innerText = localStorage.getItem('pacman-highscore') || 0
     showMenu('START', { startGame: init })
 }
