@@ -19,5 +19,5 @@ export function resolvePlayerGhostCollision(player, ghosts) {
 }
 
 export function checkWin(pellets) {
-    return pellets.length === 0
+    return !pellets.some(p => !p.isDangerous)
 }

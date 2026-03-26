@@ -1,18 +1,46 @@
 export function setupInput(callbacks) {
+    const { setNextDirection, togglePause, isGameRunning, keys} = callbacks
+
     let touchStartX = 0
     let touchstartY = 0
-    let minSwipeDist = 20
+    let minSwipeDist = 15
 
-    //Tangentbord
     window.addEventListener('keydown', ({ key }) => {
         switch (key) {
-            case 'ArrowUp': callbacks.setNextDirection('w')
+            case 'ArrowUp':
+                keys.w.pressed = true
+                setNextDirection('w')
             break
-            case 'ArrowLeft': callbacks.setNextDirection('a')
+            case 'ArrowLeft':
+                keys.a.pressed = true
+                setNextDirection('a')
             break
-            case 'ArrowDown': callbacks.setNextDirection('s')
+            case 'ArrowDown':
+                keys.s.pressed = true
+                setNextDirection('s')
             break
-            case 'ArrowRight': callbacks.setNextDirection('d')
+            case 'ArrowRight':
+                keys.d.pressed = true
+                setNextDirection('d')
+            break
+            case 'Escape': callbacks.togglePause()
+            break
+        }
+    })
+
+    window.addEventListener('keyup', ({ key }) => {
+    switch (key) {
+        case 'ArrowUp':
+            keys.w.pressed = false
+            break
+        case 'ArrowLeft':
+            keys.a.pressed = false
+            break
+        case 'ArrowDown':
+            keys.s.pressed = false
+            break
+        case 'ArrowRight':
+            keys.d.pressed = false
             break
         }
     })

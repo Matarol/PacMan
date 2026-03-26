@@ -1,14 +1,17 @@
 ﻿import { showMenu } from './menu.js'
 import { Player } from './player.js'
 import { Ghost } from './ghost.js'
+import { Villain } from './villain.js'
 import { Boundary } from './boundary.js'
-import { map, renderMap } from './map.js'
+import { map, renderMap, portalImages } from './map.js'
 import { circleCollidesWithRectangle } from './collision.js'
-import { handlePlayerMovement } from './playerController.js'
+import { handlePlayerMovement, handleSpaceMovement } from './playerController.js'
 import { updateGhosts } from './ghostController.js'
 import { updateItems } from './itemsController.js'
 import { resolvePlayerGhostCollision, checkWin } from './gameState.js'
 import { setupInput } from './inputHandler.js'
+import { mapExtra1, renderSpaceMap } from './map-extra-1.js'
+import { updateVillain } from './villainController.js'
 
 const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
@@ -24,12 +27,16 @@ let powerUps = []
 let boundaries = []
 let ghosts = []
 let player
+let villain
 let score = { value: 0 }
 let streakScore = { value: 0 }
 let highScore = { value: localStorage.getItem('pacman-highscore') || 0 }
 let animationId
 let gameRunning = true
 let winCount = 0
+let portalBoundary = null
+let portalTimer
+let portalClosingTimer
 
 const keys = {
     w: { pressed: false },
@@ -77,8 +84,127 @@ async function drawStaticMap() {
     powerUps.forEach(powerUp => powerUp.draw())
 }
 
+function openRandomPortal() {
+    if (portalBoundary) {
+        portalBoundary.isPortal = false
+    }
+
+    const candidates = boundaries.filter(b => b.type === 'block')
+
+    if (candidates.length > 0) {
+        const randomIndex = Math.floor(Math.random() * candidates.length)
+        const selectedBoundary = candidates[randomIndex]
+
+        selectedBoundary.isPortal = true
+        portalBoundary = selectedBoundary
+
+        console.log('En portal har öppnats')
+
+        portalClosingTimer = setTimeout(() => {
+            if (selectedBoundary === portalBoundary) {
+                selectedBoundary.isPortal = false
+                portalBoundary = null
+                console.log('Portalen har stängts')
+            }
+        }, 5000)
+    }
+}
+
+function startExtraLevel() {
+
+    canvas.classList.add('space-background')
+
+    gameRunning = false
+    cancelAnimationFrame(animationId)
+
+    boundaries.length = 0
+    pellets.length = 0
+    powerUps.length = 0
+    ghosts.length = 0
+
+    renderSpaceMap({c, pellets, boundaries, powerUps})
+
+    player.physicsMode = 'SPACE'
+
+    const pacmanStart = findStartPos(mapExtra1, 'p')
+    const villainStart = findStartPos(mapExtra1, 'v')
+
+    player.position.x = pacmanStart.x * Boundary.width + Boundary.width /2
+    player.position.y = pacmanStart.y * Boundary.height + Boundary.height /2
+    player.velocity.x = 0
+    player.velocity.y = 0
+
+    //placeholder för initiering av skurkPacman
+    villain = new Villain({
+        position: {
+            x: villainStart.x * Boundary.width + Boundary.width /2,
+            y: villainStart.y * Boundary.height + Boundary.height /2
+        },
+        velocity: { x: 0, y: 0},
+        context: c
+    })
+
+
+    setTimeout(() => {
+        gameRunning = true
+        animate()
+    }, 1000)
+}
+
+//Hjälpfunktion för att hitta startposition for PacMan och SkurkPacMan i mapExtra1-banan
+function findStartPos(mapArray, symbol) {
+    for (let i = 0; i < mapArray.length; i++) {
+        for (let j = 0; j < mapArray[i].length; j++) {
+            if (mapArray[i][j] === symbol) {
+                return { x: j, y: i }
+            }
+        }
+    }
+    return { x: 5, y: 5 } //Fallback
+}
+
+function togglePause() {
+    if (gameRunning) {
+        gameRunning = false
+        cancelAnimationFrame(animationId)
+
+        showMenu('PAUSED', {
+            startGame: init,
+            resumeGame: togglePause,
+            resetToMain: () => location.reload()
+        })
+    } else {
+        gameRunning = true
+        document.getElementById('ui-overlay').classList.add('hidden')
+        animate()
+    }
+}
+
+function triggerPortalTimer() {
+    clearTimeout(portalTimer)
+
+    if (gameRunning) {
+        openRandomPortal()
+
+        const nextTick = Math.random() * 10000 + 10000
+
+        portalTimer = setTimeout(triggerPortalTimer, nextTick)
+    }
+}
+
 async function init() {
     cancelAnimationFrame(animationId)
+
+    clearTimeout(portalTimer)
+    clearTimeout(portalClosingTimer)
+
+    canvas.classList.remove('space-background')
+
+
+    if (portalBoundary) {
+        portalBoundary.isPortal = false
+        portalBoundary = null
+    }
 
     await drawStaticMap()
 
@@ -87,6 +213,8 @@ async function init() {
     scoreEl.innerText = score.value
     streakScoreEl.innerText = streakScore.value
     highScoreEl.innerText = highScore.value
+
+    setTimeout(triggerPortalTimer, 10000);
 
     ghosts = [
         new Ghost({
@@ -150,10 +278,16 @@ function animate() {
     animationId = requestAnimationFrame(animate)
     c.clearRect(0, 0, canvas.width, canvas.height)
 
-    const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries)
+    if (player.physicsMode === 'SPACE' && villain) {
+        handleSpaceMovement(player, keys, boundaries)
+        updateVillain(villain, player, boundaries)
+    } else {
+        const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries)
 
-    currentDirection = result.currentDirection
-    nextDirection = result.nextDirection
+        currentDirection = result.currentDirection
+        nextDirection = result.nextDirection
+
+    }
 
     const collisionResult = resolvePlayerGhostCollision(player, ghosts)
 
@@ -192,14 +326,23 @@ function animate() {
     updateItems({player, pellets, powerUps, ghosts, score, scoreEl})
     
     boundaries.forEach((boundary) => {
+        if (boundary.isPortal) {
+            const frame = Math.floor(Date.now() / 150) % portalImages.length
+            boundary.image = portalImages[frame]
+        } else if (boundary.type === 'block') {
+            boundary.image = boundary.originalImage
+        }
+
+        if (boundary.type === 'asteroid') {
+            boundary.currentFrame = Math.floor(Date.now() / 100) % Boundary.totalFrames
+        }
+
         boundary.draw()
 
-        if (circleCollidesWithRectangle({
-            circle: player,
-            rectangle: boundary
-        })) {
-            player.velocity.x = 0
-            player.velocity.y = 0
+        if (circleCollidesWithRectangle({ circle: player, rectangle: boundary })) {
+            if (boundary.isPortal) {
+                startExtraLevel()
+            }
         }     
     })
 
@@ -207,81 +350,24 @@ function animate() {
 
     // Spelare krockar med spöke
     updateGhosts(ghosts, boundaries, player)
-    
-    if (player.velocity.x > 0) player.rotation = 0
-    else if (player.velocity.x < 0) player.rotation = Math.PI
-    else if (player.velocity.y > 0) player.rotation = Math.PI / 2
-    else if (player.velocity.y < 0) player.rotation = Math.PI * 1.5
+
+    if (player.physicsMode != 'SPACE') {    
+        if (player.velocity.x > 0) player.rotation = 0
+        else if (player.velocity.x < 0) player.rotation = Math.PI
+        else if (player.velocity.y > 0) player.rotation = Math.PI / 2
+        else if (player.velocity.y < 0) player.rotation = Math.PI * 1.5
+    }
 } //end of animate
 
-// addEventListener('keydown', ({key}) => {
-//     switch (key) {
-//         case 'ArrowUp': keys.w.pressed = true
-//         nextDirection = 'w'
-//         break
-//         case 'ArrowLeft': keys.a.pressed = true
-//         nextDirection = 'a'
-//         break
-//         case 'ArrowDown': keys.s.pressed = true
-//         nextDirection = 's'
-//         break
-//         case 'ArrowRight': keys.d.pressed = true
-//         nextDirection = 'd'
-//         break
-//     }
-// })
-
-// addEventListener('keyup', ({key}) => {
-//     switch (key) {
-//         case 'ArrowUp': keys.w.pressed = false
-//         break
-//         case 'ArrowLeft': keys.a.pressed = false
-//         break
-//         case 'ArrowDown': keys.s.pressed = false
-//         break
-//         case 'ArrowRight': keys.d.pressed = false
-//         break
-//     }
-// })
-
-// addEventListener('keydown', (e) => {
-//     if (e.key === ' ' && !gameRunning) {
-//         init();
-//     }
-// })
-
-// mobileButtons.forEach(button => {
-//     button.addEventListener('touchstart', (e) => {
-//         e.preventDefault()
-//         const key = button.getAttribute('data-key')
-//         keys[key].pressed = true
-//         nextDirection = key
-//     })
-
-//     button.addEventListener('touchend', (e) => {
-//         const key = button.getAttribute('data-key')
-//         keys[key].pressed = false
-//     })
-
-//     button.addEventListener('mousedown', (e) => {
-//         const key = button.getAttribute('data-key')
-//         keys[key].pressed = true
-//         nextDirection = key
-//     })
-
-//     button.addEventListener('mouseup', (e) => {
-//         const key = button.getAttribute('data-key')
-//         keys[key].pressed = false
-//     })
-// })
-
-window.onload = () => {
-    drawStaticMap()
+window.onload = async () => {
+    await drawStaticMap()
     highScoreEl.innerText = localStorage.getItem('pacman-highscore') || 0
     showMenu('START', { startGame: init })
 }
 
 setupInput({
     setNextDirection: (dir) => { nextDirection = dir },
-    isGameRunning: () => gameRunning
-});
+    isGameRunning: () => gameRunning,
+    togglePause: togglePause,
+    keys
+})
