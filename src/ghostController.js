@@ -1,5 +1,5 @@
 import { Ghost } from "./ghost.js"
-import { circleCollidesWithRectangle } from "./utils.js"
+import { circleCollidesWithRectangle } from "./collision.js"
 
 export function updateGhosts(ghosts, boundaries, player) { ghosts.forEach(ghost => {
         ghost.update()        

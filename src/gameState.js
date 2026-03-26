@@ -1,5 +1,9 @@
 import { circleCollidesWithCircle } from "./collision.js"
 
+export const gameState = {
+    hasVisitedExtraLevel: false
+}
+
 export function resolvePlayerGhostCollision(player, ghosts) {
 
     for (let i = ghosts.length -1; i >= 0; i--) {

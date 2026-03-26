@@ -1,5 +1,5 @@
 ﻿import { Player } from "./player.js"
-import { circleCollidesWithRectangle } from "./utils.js"
+import { circleCollidesWithRectangle } from "./collision.js"
 
 export function handlePlayerMovement(player, currentDirection, nextDirection, boundaries) {
   const speed = 5

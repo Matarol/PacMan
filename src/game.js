@@ -3,12 +3,13 @@ import { Player } from './player.js'
 import { Ghost } from './ghost.js'
 import { Villain } from './villain.js'
 import { Boundary } from './boundary.js'
+import { Pellet } from './items.js'
 import { map, renderMap, portalImages } from './map.js'
 import { circleCollidesWithRectangle } from './collision.js'
 import { handlePlayerMovement, handleSpaceMovement } from './playerController.js'
 import { updateGhosts } from './ghostController.js'
 import { updateItems } from './itemsController.js'
-import { resolvePlayerGhostCollision, checkWin } from './gameState.js'
+import { resolvePlayerGhostCollision, checkWin, gameState } from './gameState.js'
 import { setupInput } from './inputHandler.js'
 import { mapExtra1, renderSpaceMap } from './map-extra-1.js'
 import { updateVillain } from './villainController.js'
@@ -37,6 +38,9 @@ let winCount = 0
 let portalBoundary = null
 let portalTimer
 let portalClosingTimer
+let lastMainPosition = null
+let lastGhostPositions = []
+let lastPelletState = []
 
 const keys = {
     w: { pressed: false },
@@ -144,6 +148,12 @@ function startExtraLevel() {
         context: c
     })
 
+    setInterval(() => {
+        if (player.physicsMode === 'SPACE') {
+            openExitPortal(pellets)
+        }
+    }, Math.random() * 7000 + 8000)
+
 
     setTimeout(() => {
         gameRunning = true
@@ -161,6 +171,74 @@ function findStartPos(mapArray, symbol) {
         }
     }
     return { x: 5, y: 5 } //Fallback
+}
+
+function returnToMainMap() {
+    cancelAnimationFrame(animationId)
+
+    boundaries.length = 0
+    pellets.length = 0
+    powerUps.length = 0
+
+    renderMap({ c, pellets, powerUps, boundaries })
+
+    player.physicsMode = 'NORMAL'
+
+    if (lastMainPosition) {
+        player.position.x = lastMainPosition.x,
+        player.position.y = lastMainPosition.y
+    }
+
+    player.velocity.x = 0
+    player.velocity.y = 0
+
+    ghosts.length = 0
+
+    lastGhostPositions.forEach(data => {
+        ghosts.push(new Ghost({
+            position: {
+                x: data.x,
+                y: data.y
+            },
+            velocity: {
+                x: data.velocity.x,
+                y: data.velocity.y
+            },
+            color: data.color,
+            context: c
+        }))
+    })
+
+    pellets.length = 0
+
+    lastPelletState.forEach(data => {
+        pellets.push(new Pellet({
+            position: {
+                x: data.x,
+                y: data.y
+            },
+            context: c,
+            isDangerous: data.isDangerous
+        }))
+    })
+
+    setTimeout(() => {
+        animate()
+    }, 100)
+}
+
+function openExitPortal(pellets) {
+    const dangerousPellets = pellets.filter(p => p.isDangerous)
+
+    if (dangerousPellets.length === 0) return
+
+    const random = dangerousPellets[Math.floor(Math.random() * dangerousPellets.length)]
+
+    random.isPortal = true
+
+    random.portalTimer = setTimeout(() => {
+        random.isPortal = false
+    }, 3000)
 }
 
 function togglePause() {
@@ -181,6 +259,7 @@ function togglePause() {
 }
 
 function triggerPortalTimer() {
+    if (gameState.hasVisitedExtraLevel) return
     clearTimeout(portalTimer)
 
     if (gameRunning) {
@@ -199,6 +278,8 @@ async function init() {
     clearTimeout(portalClosingTimer)
 
     canvas.classList.remove('space-background')
+
+    gameState.hasVisitedExtraLevel = false
 
 
     if (portalBoundary) {
@@ -323,7 +404,7 @@ function animate() {
         winCount += 1
     }
 
-    updateItems({player, pellets, powerUps, ghosts, score, scoreEl})
+    updateItems({player, pellets, powerUps, ghosts, score, scoreEl, returnToMainMap})
     
     boundaries.forEach((boundary) => {
         if (boundary.isPortal) {
@@ -340,7 +421,36 @@ function animate() {
         boundary.draw()
 
         if (circleCollidesWithRectangle({ circle: player, rectangle: boundary })) {
-            if (boundary.isPortal) {
+            if (boundary.isPortal && !gameState.hasVisitedExtraLevel) {
+
+                gameState.hasVisitedExtraLevel = true
+
+                lastMainPosition = {
+                    x: player.position.x,
+                    y: player.position.y
+                }
+
+                lastGhostPositions = ghosts.map(ghost => ({
+                    x: ghost.position.x,
+                    y: ghost.position.y,
+                    velocity: {
+                        x: ghost.velocity.x,
+                        y: ghost.velocity.y
+                    },
+                    color: ghost.color
+                }))
+
+                ghosts.forEach(ghost => {
+                    ghost.velocity.x = 0
+                    ghost.velocity.y = 0
+                })
+
+                lastPelletState = pellets.map(p => ({
+                    x: p.position.x,
+                    y: p.position.y,
+                    isDangerous: p.isDangerous
+                }))
+
                 startExtraLevel()
             }
         }     
