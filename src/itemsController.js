@@ -1,7 +1,7 @@
 import { circleCollidesWithCircle } from "./collision.js"
 import { scareGhosts } from "./ghostController.js"
 
-export function updateItems({player, pellets, powerUps, ghosts, score, scoreEl, returnToMainMap}) {
+export function updateItems({player, pellets, powerUps, ghosts, score, scoreEl, returnToMainMap, damagePlayer}) {
 
     // Spelare krockar med powerUps
     for (let i = powerUps.length - 1; i >= 0; i-- ) {
@@ -25,7 +25,14 @@ export function updateItems({player, pellets, powerUps, ghosts, score, scoreEl, 
         if (circleCollidesWithCircle(pellet, player)) {
             if (pellet.isPortal) {
                 returnToMainMap()
+                continue
             }
+
+            if (pellet.isDangerous) {
+                damagePlayer(10)
+                pellets.splice(i, 1)
+            }
+            
             pellets.splice(i, 1)
             score.value += 10
             scoreEl.innerText = score.value

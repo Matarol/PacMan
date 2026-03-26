@@ -88,6 +88,33 @@ async function drawStaticMap() {
     powerUps.forEach(powerUp => powerUp.draw())
 }
 
+function updateHealthBar() {
+    const bar = document.getElementById('healthBar')
+    bar.style.width = gameState.health + '%'
+
+    if (gameState.health < 30) {
+        bar.style.background = 'red'
+    } else {
+        bar.style.background = 'lime'
+    }
+}
+
+function damagePlayer(amount) {
+    const now = Date.now()
+
+    //Cooldown
+    if (now - gameState.lastDamageTime < 800) return
+
+    gameState.health -= amount
+    gameState.lastDamageTime = now
+
+    updateHealthBar()
+
+    if (gameState.health <= 0) {
+        return { result: 'player-dead' }
+    }
+}
+
 function openRandomPortal() {
     if (portalBoundary) {
         portalBoundary.isPortal = false
@@ -404,7 +431,7 @@ function animate() {
         winCount += 1
     }
 
-    updateItems({player, pellets, powerUps, ghosts, score, scoreEl, returnToMainMap})
+    updateItems({player, pellets, powerUps, ghosts, score, scoreEl, returnToMainMap, damagePlayer})
     
     boundaries.forEach((boundary) => {
         if (boundary.isPortal) {

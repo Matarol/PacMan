@@ -1,7 +1,10 @@
 import { circleCollidesWithCircle } from "./collision.js"
 
 export const gameState = {
-    hasVisitedExtraLevel: false
+    hasVisitedExtraLevel: false,
+    health: 100,
+    maxHealth: 100,
+    lastDamageTime: 0
 }
 
 export function resolvePlayerGhostCollision(player, ghosts) {

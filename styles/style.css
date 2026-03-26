@@ -81,6 +81,24 @@ button:active {
     transform: translateY(0px);
 }
 
+#healthContainer {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 150px;
+  height: 15px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#healthBar {
+  height: 100%;
+  width: 100%;
+  background: lime;
+  transition: width 0.2s ease;
+}
+
 .hidden {
     display: none !important;
 }
