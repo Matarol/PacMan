@@ -28,3 +28,19 @@ export function resolvePlayerGhostCollision(player, ghosts) {
 export function checkWin(pellets) {
     return !pellets.some(p => !p.isDangerous)
 }
+
+export function damagePlayer(amount, gameState) {
+    const now = Date.now()
+
+    //Cooldown
+    if (now - gameState.lastDamageTime < 800) return { result: null }
+
+    gameState.health -= amount
+    gameState.lastDamageTime = now
+
+    if (gameState.health <= 0) {
+        gameState.health = 0
+        return { result: 'player_dead' }
+    }
+    return { result: 'damaged' }
+}

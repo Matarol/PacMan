@@ -1,5 +1,5 @@
 ﻿import { Player } from "./player.js"
-import { circleCollidesWithRectangle } from "./collision.js"
+import { circleCollidesWithRectangle, circlesCollide } from "./collision.js"
 
 export function handlePlayerMovement(player, currentDirection, nextDirection, boundaries) {
   const speed = 5
@@ -68,6 +68,8 @@ export function handleSpaceMovement(player, keys, boundaries) {
   const friction = 0.98
   const maxSpeed = 6
 
+  const asteroidRadius = 20
+
   // 🚀 Acceleration (thrusters)
   if (keys.w.pressed) player.velocity.y -= acceleration
   if (keys.s.pressed) player.velocity.y += acceleration
@@ -84,19 +86,42 @@ export function handleSpaceMovement(player, keys, boundaries) {
   for (let boundary of boundaries) {
     if (boundary.isPortal) continue
 
-    if (circleCollidesWithRectangle({
-      circle: { ...player, position: { x: nextX, y: player.position.y } },
-      rectangle: boundary
-    })) {
-      blockedX = true
+    const testCircleX = { ...player, position: { x: nextX, y: player.position.y } }
+    const testCircleY = { ...player, position: { x: player.position.x, y: nextY } }
+
+    if (boundary.type === 'asteroid') {
+      //CIRKEL-KOLLISION (för asteroider)
+      const target = { ...boundary, radius: asteroidRadius }
+
+      if (circlesCollide(testCircleX, target)) {
+        player.velocity.x *= -0.5
+        blockedX = true
+      }
+
+      if (circlesCollide(testCircleY, target)) {
+        player.velocity.y *= -0.5
+        blockedY = true
+      }
+
+    } else {
+      //REKTANGEL-KOLLISION (för vanliga väggar)
+      if (circleCollidesWithRectangle({ circle: testCircleX, rectangle: boundary})) blockedX = true
+      if (circleCollidesWithRectangle({ circle: testCircleY, rectangle: boundary })) blockedY = true
     }
 
-    if (circleCollidesWithRectangle({
-      circle: { ...player, position: { x: player.position.x, y: nextY } },
-      rectangle: boundary
-    })) {
-      blockedY = true
-    }
+    // if (circleCollidesWithRectangle({
+    //   circle: { ...player, position: { x: nextX, y: player.position.y } },
+    //   rectangle: boundary
+    // })) {
+    //   blockedX = true
+    // }
+
+    // if (circleCollidesWithRectangle({
+    //   circle: { ...player, position: { x: player.position.x, y: nextY } },
+    //   rectangle: boundary
+    // })) {
+    //   blockedY = true
+    // }
   }
 
   if (blockedX) player.velocity.x = 0

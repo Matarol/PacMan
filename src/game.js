@@ -5,11 +5,11 @@ import { Villain } from './villain.js'
 import { Boundary } from './boundary.js'
 import { Pellet } from './items.js'
 import { map, renderMap, portalImages } from './map.js'
-import { circleCollidesWithRectangle } from './collision.js'
+import { circleCollidesWithCircle, circleCollidesWithRectangle, getRepulsionVelocity } from './collision.js'
 import { handlePlayerMovement, handleSpaceMovement } from './playerController.js'
 import { updateGhosts } from './ghostController.js'
 import { updateItems } from './itemsController.js'
-import { resolvePlayerGhostCollision, checkWin, gameState } from './gameState.js'
+import { resolvePlayerGhostCollision, checkWin, gameState, damagePlayer } from './gameState.js'
 import { setupInput } from './inputHandler.js'
 import { mapExtra1, renderSpaceMap } from './map-extra-1.js'
 import { updateVillain } from './villainController.js'
@@ -96,22 +96,6 @@ function updateHealthBar() {
         bar.style.background = 'red'
     } else {
         bar.style.background = 'lime'
-    }
-}
-
-function damagePlayer(amount) {
-    const now = Date.now()
-
-    //Cooldown
-    if (now - gameState.lastDamageTime < 800) return
-
-    gameState.health -= amount
-    gameState.lastDamageTime = now
-
-    updateHealthBar()
-
-    if (gameState.health <= 0) {
-        return { result: 'player-dead' }
     }
 }
 
@@ -285,6 +269,33 @@ function togglePause() {
     }
 }
 
+function handleGameOver(isWin) {
+    cancelAnimationFrame(animationId)
+    gameRunning = false
+
+    const finalScore = streakScore.value + score.value
+
+    if (!isWin && finalScore > highScore.value) {
+        highScore.value = finalScore
+        localStorage.setItem('pacman-highscore', finalScore)
+    }
+
+    showMenu('GAMEOVER',
+        { startGame: init },
+        { won: isWin, score: isWin ? score.value : finalScore }
+    )
+
+    if (isWin) {
+        streakScore.value += score.value
+        winCount += 1
+    } else {
+        streakScore.value = 0
+        winCount = 0
+    }
+    //Nollställ hälsa inför nästa runda
+    gameState.health = 100
+}
+
 function triggerPortalTimer() {
     if (gameState.hasVisitedExtraLevel) return
     clearTimeout(portalTimer)
@@ -389,49 +400,58 @@ function animate() {
     if (player.physicsMode === 'SPACE' && villain) {
         handleSpaceMovement(player, keys, boundaries)
         updateVillain(villain, player, boundaries)
+
+        boundaries.forEach(boundary => {
+            if (boundary.type === 'asteroid') {
+                //knuffa spelaren
+                const pRepulsion = getRepulsionVelocity(player, boundary)
+                player.velocity.x += pRepulsion.x
+                player.velocity.y += pRepulsion.y
+
+                const collisionForce = Math.hypot(pRepulsion.x, pRepulsion.y)
+
+                if (collisionForce > 0.4) {
+                    damagePlayer(5, gameState)
+                    updateHealthBar()
+                }
+
+                //knuffa skurk-pacman
+                const vRepulsion = getRepulsionVelocity(villain, boundary)
+                villain.velocity.x += vRepulsion.x
+                villain.velocity.y += vRepulsion.y
+            }
+        })
+
+        if (circleCollidesWithCircle(player, villain)) {
+            damagePlayer(20, gameState)
+            updateHealthBar()
+        }
+
+        if (gameState.health <= 0) {
+            handleGameOver(false)
+            return
+        }
     } else {
         const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries)
-
         currentDirection = result.currentDirection
         nextDirection = result.nextDirection
 
     }
 
     const collisionResult = resolvePlayerGhostCollision(player, ghosts)
+    const itemResult = updateItems({player, pellets, powerUps, ghosts, score, scoreEl, returnToMainMap, damagePlayer, gameState})
 
-    if (collisionResult.result === 'player_dead') {
-        cancelAnimationFrame(animationId)
-        gameRunning = false
+    if (itemResult?.result === 'player_damaged') updateHealthBar()
 
-        const finalScore = streakScore.value + score.value
-
-        if (finalScore > highScore.value) {
-            highScore.value = finalScore
-            localStorage.setItem('pacman-highscore', finalScore)
-        }
-
-        showMenu('GAMEOVER',
-            { startGame: init },
-            { won: false, score: finalScore }        
-        )
-        streakScore.value = 0
-        winCount = 0
+    if ((collisionResult.result) === 'player_dead' || gameState.health <= 0) {
+        handleGameOver(false)
+        return
     }
 
     // Vilkor för vinst
     if (checkWin(pellets)) {
-        cancelAnimationFrame(animationId)
-        gameRunning = false
-
-        showMenu('GAMEOVER',
-            { startGame: init },
-            { won: true, score: score.value }
-        )
-        streakScore.value += score.value
-        winCount += 1
+        handleGameOver(true)
     }
-
-    updateItems({player, pellets, powerUps, ghosts, score, scoreEl, returnToMainMap, damagePlayer})
     
     boundaries.forEach((boundary) => {
         if (boundary.isPortal) {
