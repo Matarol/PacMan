@@ -423,7 +423,7 @@ function animate() {
         })
 
         if (circleCollidesWithCircle(player, villain)) {
-            damagePlayer(20, gameState)
+            damagePlayer(0, gameState)
             updateHealthBar()
         }
 

@@ -27,7 +27,7 @@ export class Villain {
         this.c.beginPath()
         this.c.arc(this.position.x + this.eyesOffsetX, this.position.y + this.eyesOffsetY, 3, 0, Math.PI * 2)
         this.c.closePath()
-        this.c.fillStyle = 'yellow'
+        this.c.fillStyle = 'black'
         this.c.fill()
     }
 

@@ -1,5 +1,5 @@
 ﻿import { Player } from "./player.js"
-import { circleCollidesWithRectangle, circlesCollide } from "./collision.js"
+import { circleCollidesWithRectangle, circlesCollide, getRepulsionVelocity } from "./collision.js"
 
 export function handlePlayerMovement(player, currentDirection, nextDirection, boundaries) {
   const speed = 5
@@ -68,7 +68,7 @@ export function handleSpaceMovement(player, keys, boundaries) {
   const friction = 0.98
   const maxSpeed = 6
 
-  const asteroidRadius = 20
+  const asteroidRadius = 10
 
   // 🚀 Acceleration (thrusters)
   if (keys.w.pressed) player.velocity.y -= acceleration
@@ -94,13 +94,15 @@ export function handleSpaceMovement(player, keys, boundaries) {
       const target = { ...boundary, radius: asteroidRadius }
 
       if (circlesCollide(testCircleX, target)) {
-        player.velocity.x *= -0.5
-        blockedX = true
+        player.velocity.x = 0
+        // player.velocity.x *= -0.5
+        // blockedX = true
       }
 
       if (circlesCollide(testCircleY, target)) {
-        player.velocity.y *= -0.5
-        blockedY = true
+        player.velocity.y = 0
+        // player.velocity.y *= -0.5
+        // blockedY = true
       }
 
     } else {
@@ -141,5 +143,16 @@ export function handleSpaceMovement(player, keys, boundaries) {
   // 🔄 Rotation (peka dit du rör dig)
   if (speed > 0.1) {
     player.rotation = Math.atan2(player.velocity.y, player.velocity.x)
+  }
+
+  for (let boundary of boundaries) {
+    if (boundary.isPortal) continue
+
+    if (boundary.type === 'asteroid') {
+      const push = getRepulsionVelocity(player, boundary)
+
+      player.position.x += push.x
+      player.position.y += push.y
+    }
   }
 }
