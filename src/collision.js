@@ -43,12 +43,30 @@ export function getRepulsionVelocity(circle, rectangle) {
     const dy = circle.position.y - closestY
     const distance = Math.hypot(dx, dy)
 
-    const buffer = circle.radius + 2
+    const buffer = circle.radius
     if (distance < buffer && distance > 0) {
         const force = (buffer - distance) / buffer //starkare knuff ju närmare man är
         return {
             x: (dx / distance) * force * 0.75, // 2 är styrkan på knuffen
             y: (dy / distance) * force * 0.75
+        }
+    }
+    return { x: 0, y: 0 }
+}
+
+export function getCircleRepulsion(c1, c2) {
+    const dx = c1.position.x - c2.position.x
+    const dy = c1.position.y - c2.position.y
+    const distance = Math.hypot(dx, dy)
+
+    const minDistance = (c1.radius || 15) + (c2.radius || 15)
+
+    if (distance < minDistance && distance > 0) {
+        const overlap = minDistance - distance
+
+        return {
+            x: (dx / distance) * overlap,
+            y: (dy / distance) * overlap
         }
     }
     return { x: 0, y: 0 }

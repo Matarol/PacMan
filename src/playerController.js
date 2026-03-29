@@ -90,40 +90,13 @@ export function handleSpaceMovement(player, keys, boundaries) {
     const testCircleY = { ...player, position: { x: player.position.x, y: nextY } }
 
     if (boundary.type === 'asteroid') {
-      //CIRKEL-KOLLISION (för asteroider)
-      const target = { ...boundary, radius: asteroidRadius }
-
-      if (circlesCollide(testCircleX, target)) {
-        player.velocity.x = 0
-        // player.velocity.x *= -0.5
-        // blockedX = true
-      }
-
-      if (circlesCollide(testCircleY, target)) {
-        player.velocity.y = 0
-        // player.velocity.y *= -0.5
-        // blockedY = true
-      }
-
+      continue
+      
     } else {
       //REKTANGEL-KOLLISION (för vanliga väggar)
       if (circleCollidesWithRectangle({ circle: testCircleX, rectangle: boundary})) blockedX = true
       if (circleCollidesWithRectangle({ circle: testCircleY, rectangle: boundary })) blockedY = true
-    }
-
-    // if (circleCollidesWithRectangle({
-    //   circle: { ...player, position: { x: nextX, y: player.position.y } },
-    //   rectangle: boundary
-    // })) {
-    //   blockedX = true
-    // }
-
-    // if (circleCollidesWithRectangle({
-    //   circle: { ...player, position: { x: player.position.x, y: nextY } },
-    //   rectangle: boundary
-    // })) {
-    //   blockedY = true
-    // }
+    }    
   }
 
   if (blockedX) player.velocity.x = 0

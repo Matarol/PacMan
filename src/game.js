@@ -5,7 +5,7 @@ import { Villain } from './villain.js'
 import { Boundary } from './boundary.js'
 import { Pellet } from './items.js'
 import { map, renderMap, portalImages } from './map.js'
-import { circleCollidesWithCircle, circleCollidesWithRectangle, getRepulsionVelocity } from './collision.js'
+import { circleCollidesWithCircle, circleCollidesWithRectangle, getRepulsionVelocity, getCircleRepulsion } from './collision.js'
 import { handlePlayerMovement, handleSpaceMovement } from './playerController.js'
 import { updateGhosts } from './ghostController.js'
 import { updateItems } from './itemsController.js'
@@ -403,27 +403,39 @@ function animate() {
 
         boundaries.forEach(boundary => {
             if (boundary.type === 'asteroid') {
-                //knuffa spelaren
-                const pRepulsion = getRepulsionVelocity(player, boundary)
-                player.velocity.x += pRepulsion.x
-                player.velocity.y += pRepulsion.y
 
-                const collisionForce = Math.hypot(pRepulsion.x, pRepulsion.y)
+                const asteroid = {
+                    position: {
+                        x: boundary.position.x + boundary.width / 2,
+                        y: boundary.position.y + boundary.height / 2
+                    },
+                    radius: 15
+                }
+
+                // 🟡 Player
+                const pPush = getCircleRepulsion(player, asteroid)
+                player.position.x += pPush.x
+                player.position.y += pPush.y
+
+                const collisionForce = Math.hypot(pPush.x, pPush.y)
 
                 if (collisionForce > 0.4) {
                     damagePlayer(5, gameState)
                     updateHealthBar()
                 }
 
-                //knuffa skurk-pacman
-                const vRepulsion = getRepulsionVelocity(villain, boundary)
-                villain.velocity.x += vRepulsion.x
-                villain.velocity.y += vRepulsion.y
+                // 🔴 Villain
+                if (villain) {
+                    const vPush = getCircleRepulsion(villain, asteroid)
+                    villain.position.x += vPush.x
+                    villain.position.y += vPush.y
+                }
             }
         })
 
+
         if (circleCollidesWithCircle(player, villain)) {
-            damagePlayer(0, gameState)
+            damagePlayer(15, gameState)
             updateHealthBar()
         }
 
@@ -467,7 +479,7 @@ function animate() {
 
         boundary.draw()
 
-        if (circleCollidesWithRectangle({ circle: player, rectangle: boundary })) {
+        if (player.physicsMode !== 'SPACE' && circleCollidesWithRectangle({ circle: player, rectangle: boundary })) {
             if (boundary.isPortal && !gameState.hasVisitedExtraLevel) {
 
                 gameState.hasVisitedExtraLevel = true
