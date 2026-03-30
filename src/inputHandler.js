@@ -1,3 +1,13 @@
+function pressKey(dir) {
+    keys.w.pressed = false
+    keys.a.pressed = false
+    keys.s.pressed = false
+    keys.d.pressed = false
+
+    keys[dir].pressed = true
+    callbacks.setNextDirection(dir)
+}
+
 export function setupInput(callbacks) {
     const { setNextDirection, togglePause, isGameRunning, keys} = callbacks
 
@@ -63,13 +73,13 @@ export function setupInput(callbacks) {
 
         if (Math.abs(dx) > minSwipeDist || Math.abs(dy) > minSwipeDist) {
             if (Math.abs(dx) > Math.abs(dy)) {
-                if (dx > 0) callbacks.setNextDirection('d')
+                if (dx > 0) pressKey('d')
                     else
-                callbacks.setNextDirection('a')
+                pressKey('a')
         } else {
-            if (dy > 0) callbacks.setNextDirection('s')
+            if (dy > 0) pressKey('s')
                 else
-            callbacks.setNextDirection('w')
+            pressKey('w')
         }
 
         touchStartX = touchCurrentX
