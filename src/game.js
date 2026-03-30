@@ -180,14 +180,22 @@ function startExtraLevel() {
 }
 
 function handleVillainEaten(eatenVillain) {
-    gameRunning = false
+    // 1. Stoppa spelet
+    gameRunning = false 
 
+    // 2. Skapa effekten för skurken
     activeEffects.push(new FloatingText({
         x: eatenVillain.position.x,
         y: eatenVillain.position.y,
         text: '+500',
         color: '#f863d5'
     }))
+
+    // 3. Beräkna bonus och uppdatera poäng
+    const pelletBonus = pellets.length * 10
+    const totalBonus = 500 + pelletBonus
+    score.value += totalBonus
+    scoreEl.innerText = score.value
 
     // 4. "Sug in" pellets visuellt
     const drainInterval = setInterval(() => {
@@ -201,27 +209,26 @@ function handleVillainEaten(eatenVillain) {
             }))
         } else {
             clearInterval(drainInterval)
+            
+            // 5. NÄR ALLA PELLETS ÄR KLARA: Visa menyn!
+            // Vi lägger en liten delay så man hinner se sista effekten
+            setTimeout(() => {
+                cancelAnimationFrame(animationId) // Stoppa loopen helt
+                
+                showMenu('BONUSLVLCOMPLETE', {
+                    resumeGame: () => {
+                        gameState.hasVisitedExtraLevel = true
+                        activeEffects = []
+                        villains = []
+                        returnToMainMap()
+                    },
+                    resetToMain: () => location.reload()
+                }, {
+                    score: totalBonus // Skickar med bonusen till menyn
+                })
+            }, 1000)
         }
-    }, 100)
-
-    //Beräkna bonuspoäng
-    const pelletBonus = pellets.length * 10
-    const totalBonus = 500 + pelletBonus
-    score.value += totalBonus
-    scoreEl.innerText = score.value
-
-    //Visa en lite bonus-popup
-    console.log(`Extra level comppleted with BONUS! Skurk: 500, Pellets: ${pelletBonus}. Totalt: ${totalBonus}!`)
-
-    //En kort fördröjning
-    setTimeout(() => {
-        gameState.hasVisitedExtraLevel = true
-        returnToMainMap()
-        activeEffects = []
-    }, 8000)
-
-
-villains = []
+    }, 50)
 }
 
 //Hjälpfunktion för att hitta startposition for PacMan och SkurkPacMan i mapExtra1-banan
@@ -532,7 +539,7 @@ function animate() {
     }
 
     // Vilkor för vinst
-    if (checkWin(pellets)) {
+    if (checkWin(pellets) && player.physicsMode === 'NORMAL') {
         handleGameOver(true)
     }
     

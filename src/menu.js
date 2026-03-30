@@ -24,14 +24,23 @@ export const showMenu = (state, callbacks, options = {}) => {
         GAMEOVER: {
             title: options.won ? "Du vann!" : "Du förlorade!",
             content: `Poäng: ${options.score}`,
-            buttons: [{
-                text: options.won ? "Starta nästa nivå" : "Spela igen",
-                action: callbacks.startGame
-            }]            
+            buttons: [
+                { text: options.won ? "Starta nästa nivå" : "Spela igen", action: callbacks.startGame }
+            ]            
+        },
+
+        BONUSLVLCOMPLETE: {
+            title: "Extrabana avklarad",
+            content: `Bonuspoäng denna nivå: ${options.score}`,
+            buttons: [
+                { text: "Fortsätt spela", action: callbacks.resumeGame },
+                {text: "Avsluta spel", action: callbacks.resetToMain }
+            ]
         }
     }
 
     const data = menuData[state]
+    if (!data) return
 
     menuButtons.innerHTML = ''
     menuTitle.innerText = data.title
