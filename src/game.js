@@ -399,7 +399,6 @@ function animate() {
 
     if (player.physicsMode === 'SPACE' && villains) {
         handleSpaceMovement(player, keys, boundaries)
-        updateVillain(villains, player, boundaries)
 
         boundaries.forEach(boundary => {
             if (boundary.type === 'asteroid') {
