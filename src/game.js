@@ -13,6 +13,7 @@ import { resolvePlayerGhostCollision, checkWin, gameState, damagePlayer } from '
 import { setupInput } from './inputHandler.js'
 import { mapExtra1, renderSpaceMap } from './map-extra-1.js'
 import { updateVillain } from './villainController.js'
+import { FloatingText } from './floatingText.js'
 
 const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
@@ -41,6 +42,7 @@ let portalClosingTimer
 let lastMainPosition = null
 let lastGhostPositions = []
 let lastPelletState = []
+let activeEffects = [] // Array för att hålla reda på texterna
 
 const keys = {
     w: { pressed: false },
@@ -175,6 +177,51 @@ function startExtraLevel() {
         gameRunning = true
         animate()
     }, 1000)
+}
+
+function handleVillainEaten(eatenVillain) {
+    gameRunning = false
+
+    activeEffects.push(new FloatingText({
+        x: eatenVillain.position.x,
+        y: eatenVillain.position.y,
+        text: '+500',
+        color: '#f863d5'
+    }))
+
+    // 4. "Sug in" pellets visuellt
+    const drainInterval = setInterval(() => {
+        if (pellets.length > 0) {
+            const p = pellets.pop()
+            activeEffects.push(new FloatingText({
+                x: p.position.x,
+                y: p.position.y,
+                text: '+10',
+                color: 'white'
+            }))
+        } else {
+            clearInterval(drainInterval)
+        }
+    }, 100)
+
+    //Beräkna bonuspoäng
+    const pelletBonus = pellets.length * 10
+    const totalBonus = 500 + pelletBonus
+    score.value += totalBonus
+    scoreEl.innerText = score.value
+
+    //Visa en lite bonus-popup
+    console.log(`Extra level comppleted with BONUS! Skurk: 500, Pellets: ${pelletBonus}. Totalt: ${totalBonus}!`)
+
+    //En kort fördröjning
+    setTimeout(() => {
+        gameState.hasVisitedExtraLevel = true
+        returnToMainMap()
+        activeEffects = []
+    }, 8000)
+
+
+villains = []
 }
 
 //Hjälpfunktion för att hitta startposition for PacMan och SkurkPacMan i mapExtra1-banan
@@ -402,6 +449,15 @@ function animate() {
     animationId = requestAnimationFrame(animate)
     c.clearRect(0, 0, canvas.width, canvas.height)
 
+    activeEffects.forEach((effect, index) => {
+        if (effect.opacity <= 0) {
+            activeEffects.splice(index, 1)
+        } else {
+            effect.update()
+            effect.draw(c)
+        }
+    })
+
     if (player.physicsMode === 'SPACE' && villains) {
         handleSpaceMovement(player, keys, boundaries)
 
@@ -443,13 +499,14 @@ function animate() {
 
             if (circleCollidesWithCircle(player, v)) {
                 if (v.miniature) {
+                    const savedVillain = { ...v } // Spara positionen
                     villains.splice(i, 1)
-                    score.value += 500
-                    scoreEl.innerText = score.value
-                    console.log('skurk uppäten')
+                    handleVillainEaten(savedVillain) // Skicka med skurken hit!
+                    return
+                } else {
+                    damagePlayer(15, gameState)
+                    updateHealthBar()
                 }
-                damagePlayer(15, gameState)
-                updateHealthBar()
             }
         }
 
