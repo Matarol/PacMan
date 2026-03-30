@@ -127,6 +127,11 @@ function openRandomPortal() {
 
 function startExtraLevel() {
 
+    keys.w.pressed = false
+    keys.a.pressed = false
+    keys.s.pressed = false
+    keys.d.pressed = false
+
     canvas.classList.add('space-background')
 
     gameRunning = false

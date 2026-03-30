@@ -1,14 +1,14 @@
 export function setupInput(callbacks) {
 
     function pressKey(dir) {
-    keys.w.pressed = false
-    keys.a.pressed = false
-    keys.s.pressed = false
-    keys.d.pressed = false
+        keys.w.pressed = false
+        keys.a.pressed = false
+        keys.s.pressed = false
+        keys.d.pressed = false
 
-    keys[dir].pressed = true
-    callbacks.setNextDirection(dir)
-}
+        keys[dir].pressed = true
+        callbacks.setNextDirection(dir)
+    }
     const { setNextDirection, togglePause, isGameRunning, keys} = callbacks
 
     let touchStartX = 0
@@ -86,4 +86,11 @@ export function setupInput(callbacks) {
         touchstartY = touchCurrentY
         }
     }, { passive: false })
+
+    window.addEventListener('touchend', () => {
+        keys.w.pressed = false
+        keys.a.pressed = false
+        keys.s.pressed = false
+        keys.d.pressed = false
+    })
 }
