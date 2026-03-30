@@ -9,6 +9,7 @@ export class Villain {
         this.rotation = 0
         this.eyesOffsetX = 3
         this.eyesOffsetY = -6
+        this.miniature = false
     }
 
     draw() {
@@ -19,7 +20,7 @@ export class Villain {
         this.c.beginPath()
         this.c.arc(this.position.x, this.position.y, this.radius, this.radians, Math.PI * 2 - this.radians)
         this.c.lineTo(this.position.x, this.position.y)
-        this.c.fillStyle = '#ff3300'
+        this.c.fillStyle = this.miniature ? '#f863d5' : '#ff3300'
         this.c.fill()
         this.c.closePath()        
         this.c.restore()
@@ -32,6 +33,8 @@ export class Villain {
     }
 
     update() {        
+        this.radius = this.miniature ? 10 : 25
+
         this.position.x += this.velocity.x
         this.position.y += this.velocity.y
 

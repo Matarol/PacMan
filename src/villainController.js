@@ -7,9 +7,16 @@ export function updateVillain(villain, player, boundaries) {
     const speed = 2
 
     // Grundriktning mot spelaren
-    const dx = player.position.x - villain.position.x
-    const dy = player.position.y - villain.position.y
-    let targetAngle = Math.atan2(dy, dx)
+    let dx = player.position.x - villain.position.x
+    let dy = player.position.y - villain.position.y
+
+    // Miniskurken måste fly istället - riktning bort från pacman
+    if (villain.miniature) {
+        dx = -dx
+        dy = -dy
+    }
+
+    let targetAngle = Math.atan2(dy, dx)    
 
     //Se hinder framför sig
     const lookAheadDistance = 40
@@ -69,4 +76,14 @@ export function updateVillain(villain, player, boundaries) {
 
     villain.update()
 
+}
+
+//Funktion för att krympa skurken ifall en powerUp äts i extrabanan
+export function shrunkenVillain(villain) {
+    villain.miniature = true
+
+    setTimeout(() => {
+            villain.miniature = false
+        },
+    4000)
 }

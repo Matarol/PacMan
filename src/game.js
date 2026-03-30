@@ -28,7 +28,7 @@ let powerUps = []
 let boundaries = []
 let ghosts = []
 let player
-let villain
+let villains = []
 let score = { value: 0 }
 let streakScore = { value: 0 }
 let highScore = { value: localStorage.getItem('pacman-highscore') || 0 }
@@ -150,14 +150,14 @@ function startExtraLevel() {
     player.velocity.y = 0
 
     //placeholder för initiering av skurkPacman
-    villain = new Villain({
+    villains = [new Villain({
         position: {
             x: villainStart.x * Boundary.width + Boundary.width /2,
             y: villainStart.y * Boundary.height + Boundary.height /2
         },
         velocity: { x: 0, y: 0},
         context: c
-    })
+    })]
 
     setInterval(() => {
         if (player.physicsMode === 'SPACE') {
@@ -397,9 +397,9 @@ function animate() {
     animationId = requestAnimationFrame(animate)
     c.clearRect(0, 0, canvas.width, canvas.height)
 
-    if (player.physicsMode === 'SPACE' && villain) {
+    if (player.physicsMode === 'SPACE' && villains) {
         handleSpaceMovement(player, keys, boundaries)
-        updateVillain(villain, player, boundaries)
+        updateVillain(villains, player, boundaries)
 
         boundaries.forEach(boundary => {
             if (boundary.type === 'asteroid') {
@@ -425,18 +425,28 @@ function animate() {
                 }
 
                 // 🔴 Villain
-                if (villain) {
-                    const vPush = getCircleRepulsion(villain, asteroid)
-                    villain.position.x += vPush.x
-                    villain.position.y += vPush.y
-                }
+                villains.forEach(v => {
+                    const vPush = getCircleRepulsion(v, asteroid)
+                    v.position.x += vPush.x
+                    v.position.y += vPush.y
+                })
             }
         })
 
+        for (let i = villains.length - 1; i >= 0; i--) {
+            const v = villains[i]
+            updateVillain(v, player, boundaries)
 
-        if (circleCollidesWithCircle(player, villain)) {
-            damagePlayer(15, gameState)
-            updateHealthBar()
+            if (circleCollidesWithCircle(player, v)) {
+                if (v.miniature) {
+                    villains.splice(i, 1)
+                    score.value += 500
+                    scoreEl.innerText = score.value
+                    console.log('skurk uppäten')
+                }
+                damagePlayer(15, gameState)
+                updateHealthBar()
+            }
         }
 
         if (gameState.health <= 0) {
@@ -451,7 +461,7 @@ function animate() {
     }
 
     const collisionResult = resolvePlayerGhostCollision(player, ghosts)
-    const itemResult = updateItems({player, pellets, powerUps, ghosts, score, scoreEl, returnToMainMap, damagePlayer, gameState})
+    const itemResult = updateItems({player, pellets, powerUps, ghosts, villains, score, scoreEl, returnToMainMap, damagePlayer, gameState})
 
     if (itemResult?.result === 'player_damaged') updateHealthBar()
 
