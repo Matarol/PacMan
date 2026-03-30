@@ -1,4 +1,6 @@
-function pressKey(dir) {
+export function setupInput(callbacks) {
+
+    function pressKey(dir) {
     keys.w.pressed = false
     keys.a.pressed = false
     keys.s.pressed = false
@@ -7,8 +9,6 @@ function pressKey(dir) {
     keys[dir].pressed = true
     callbacks.setNextDirection(dir)
 }
-
-export function setupInput(callbacks) {
     const { setNextDirection, togglePause, isGameRunning, keys} = callbacks
 
     let touchStartX = 0
