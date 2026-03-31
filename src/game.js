@@ -1,19 +1,17 @@
 ﻿import { showMenu } from './menu.js'
 import { Player } from './player.js'
 import { Ghost } from './ghost.js'
-import { Villain } from './villain.js'
 import { Boundary } from './boundary.js'
 import { Pellet } from './items.js'
-import { classicMap, renderClassicMap, portalImages } from './classicMap.js'
-import { circleCollidesWithCircle, circleCollidesWithRectangle, getRepulsionVelocity, getCircleRepulsion } from './collision.js'
+import { classicLayout, renderClassicMap, portalImages } from './classicMap.js'
+import { circleCollidesWithCircle, circleCollidesWithRectangle, getCircleRepulsion } from './collision.js'
 import { handlePlayerMovement, handleSpaceMovement } from './playerController.js'
 import { updateGhosts } from './ghostController.js'
 import { updateItems } from './itemsController.js'
 import { resolvePlayerGhostCollision, checkWin, gameState, damagePlayer } from './gameState.js'
 import { setupInput } from './inputHandler.js'
-import { mapExtra1, renderSpaceMap } from './spaceMap.js'
 import { updateVillain } from './villainController.js'
-import { FloatingText } from './floatingText.js'
+import { initSpaceLevel, handleVillainEaten } from './spaceLevel.js'
 
 const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
@@ -30,11 +28,6 @@ let boundaries = []
 let ghosts = []
 let player
 let villains = []
-let score = { value: 0 }
-let streakScore = { value: 0 }
-let highScore = { value: localStorage.getItem('pacman-highscore') || 0 }
-let animationId
-let gameRunning = true
 let winCount = 0
 let portalBoundary = null
 let portalTimer
@@ -51,21 +44,14 @@ const keys = {
     d: { pressed: false }
 }
 
-const gameController = {
-    get gameRunning() { return gameRunning },
-    set gameRunning(val) { gameRunning = val },
-    get animationId() { return animationId },
-    animate: animate
-}
-
 let currentDirection = null
 let nextDirection = null
 
 async function drawStaticMap() {
     const dpr = window.devicePixelRatio || 1;
 
-    const logicalWidth = classicMap[0].length * Boundary.width;
-    const logicalHeight = classicMap.length * Boundary.height;
+    const logicalWidth = classicLayout[0].length * Boundary.width;
+    const logicalHeight = classicLayout.length * Boundary.height;
 
     const scale = Math.min(window.innerWidth / logicalWidth, 1);
 
@@ -135,7 +121,7 @@ function openRandomPortal() {
 }
 
 function returnToMainMap() {
-    cancelAnimationFrame(animationId)
+    cancelAnimationFrame(gameState.animationId)
 
     boundaries.length = 0
     pellets.length = 0
@@ -191,9 +177,9 @@ function returnToMainMap() {
 
 
 function togglePause() {
-    if (gameRunning) {
-        gameRunning = false
-        cancelAnimationFrame(animationId)
+    if (gameState.gameRunning) {
+        gameState.gameRunning = false
+        cancelAnimationFrame(gameState.animationId)
 
         showMenu('PAUSED', {
             startGame: init,
@@ -201,33 +187,33 @@ function togglePause() {
             resetToMain: () => location.reload()
         })
     } else {
-        gameRunning = true
+        gameState.gameRunning = true
         document.getElementById('ui-overlay').classList.add('hidden')
         animate()
     }
 }
 
 function handleGameOver(isWin) {
-    cancelAnimationFrame(animationId)
-    gameRunning = false
+    cancelAnimationFrame(gameState.animationId)
+    gameState.gameRunning = false
 
-    const finalScore = streakScore.value + score.value
+    const finalScore = gameState.streakScore + gameState.score
 
-    if (!isWin && finalScore > highScore.value) {
-        highScore.value = finalScore
+    if (!isWin && finalScore > gameState.highScore) {
+        gameState.highScore = finalScore
         localStorage.setItem('pacman-highscore', finalScore)
     }
 
     showMenu('GAMEOVER',
         { startGame: init },
-        { won: isWin, score: isWin ? score.value : finalScore }
+        { won: isWin, score: isWin ? gameState.score : finalScore }
     )
 
     if (isWin) {
-        streakScore.value += score.value
+        gameState.streakScore += gameState.score
         winCount += 1
     } else {
-        streakScore.value = 0
+        gameState.streakScore = 0
         winCount = 0
     }
     //Nollställ hälsa inför nästa runda
@@ -238,7 +224,7 @@ function triggerPortalTimer() {
     if (gameState.hasVisitedExtraLevel) return
     clearTimeout(portalTimer)
 
-    if (gameRunning) {
+    if (gameState.gameRunning) {
         openRandomPortal()
 
         const nextTick = Math.random() * 10000 + 10000
@@ -248,7 +234,7 @@ function triggerPortalTimer() {
 }
 
 async function init() {
-    cancelAnimationFrame(animationId)
+    cancelAnimationFrame(gameState.animationId)
 
     clearTimeout(portalTimer)
     clearTimeout(portalClosingTimer)
@@ -265,11 +251,11 @@ async function init() {
 
     await drawStaticMap()
 
-    gameRunning = true
-    score.value = 0
-    scoreEl.innerText = score.value
-    streakScoreEl.innerText = streakScore.value
-    highScoreEl.innerText = highScore.value
+    gameState.gameRunning = true
+    gameState.score = 0
+    scoreEl.innerText = gameState.score
+    streakScoreEl.innerText = gameState.streakScore
+    highScoreEl.innerText = gameState.highScore
 
     setTimeout(triggerPortalTimer, 10000);
 
@@ -332,9 +318,10 @@ async function init() {
 }
 
 function animate() {
-    animationId = requestAnimationFrame(animate)
+    gameState.animationId = requestAnimationFrame(animate)
     c.clearRect(0, 0, canvas.width, canvas.height)
 
+    // 1. Rendera effekter (poängtexter etc)
     activeEffects.forEach((effect, index) => {
         if (effect.opacity <= 0) {
             activeEffects.splice(index, 1)
@@ -344,12 +331,12 @@ function animate() {
         }
     })
 
+    // 2. RYMDBANAN (Om vi är i rymden)
     if (player.physicsMode === 'SPACE' && villains) {
         handleSpaceMovement(player, keys, boundaries)
 
         boundaries.forEach(boundary => {
             if (boundary.type === 'asteroid') {
-
                 const asteroid = {
                     position: {
                         x: boundary.position.x + boundary.width / 2,
@@ -357,20 +344,15 @@ function animate() {
                     },
                     radius: 15
                 }
-
-                // 🟡 Player
                 const pPush = getCircleRepulsion(player, asteroid)
                 player.position.x += pPush.x
                 player.position.y += pPush.y
 
-                const collisionForce = Math.hypot(pPush.x, pPush.y)
-
-                if (collisionForce > 0.4) {
+                if (Math.hypot(pPush.x, pPush.y) > 0.4) {
                     damagePlayer(5, gameState)
                     updateHealthBar()
                 }
 
-                // 🔴 Villain
                 villains.forEach(v => {
                     const vPush = getCircleRepulsion(v, asteroid)
                     v.position.x += vPush.x
@@ -385,9 +367,13 @@ function animate() {
 
             if (circleCollidesWithCircle(player, v)) {
                 if (v.miniature) {
-                    const savedVillain = { ...v } // Spara positionen
+                    const savedVillain = { ...v }
                     villains.splice(i, 1)
-                    handleVillainEaten(savedVillain) // Skicka med skurken hit!
+                    // HÄR ANVÄNDER VI DEN NYA EXPORTERADE FUNKTIONEN
+                    handleVillainEaten({
+                        eatenVillain: savedVillain,
+                        pellets, scoreEl, activeEffects, showMenu, gameState, returnToMainMap
+                    })
                     return
                 } else {
                     damagePlayer(15, gameState)
@@ -400,32 +386,59 @@ function animate() {
             handleGameOver(false)
             return
         }
-    } else {
+    } 
+    // 3. VANLIGA BANAN
+    else {
         const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries)
         currentDirection = result.currentDirection
         nextDirection = result.nextDirection
-
     }
 
+    // 4. KOLLISIONER & ITEMS
     const collisionResult = resolvePlayerGhostCollision(player, ghosts)
-    const itemResult = updateItems({player, pellets, powerUps, ghosts, villains, score, scoreEl, returnToMainMap, damagePlayer, gameState})
+    const itemResult = updateItems({player, pellets, powerUps, ghosts, villains, scoreEl, returnToMainMap, damagePlayer, gameState})
 
     if (itemResult?.result === 'player_damaged') updateHealthBar()
 
-    if ((collisionResult.result) === 'player_dead' || gameState.health <= 0) {
+    if (collisionResult.result === 'player_dead' || gameState.health <= 0) {
         handleGameOver(false)
         return
     }
 
-    // Vilkor för vinst
     if (checkWin(pellets) && player.physicsMode === 'NORMAL') {
         handleGameOver(true)
     }
     
+    // 5. RITA BANAN OCH SKÖTA PORTALER
     boundaries.forEach((boundary) => {
         if (boundary.isPortal) {
+            // Animera portal-bilden
             const frame = Math.floor(Date.now() / 150) % portalImages.length
             boundary.image = portalImages[frame]
+
+            // KOLLA OM SPELAREN GÅR IN I PORTALEN
+            if (player.physicsMode !== 'SPACE' && !gameState.hasVisitedExtraLevel) {
+                if (circleCollidesWithRectangle({ circle: player, rectangle: boundary })) {
+                    
+                    gameState.hasVisitedExtraLevel = true
+
+                    // Spara snapshot
+                    lastMainPosition = { x: player.position.x, y: player.position.y }
+                    lastGhostPositions = ghosts.map(ghost => ({
+                        x: ghost.position.x, y: ghost.position.y,
+                        velocity: { x: ghost.velocity.x, y: ghost.velocity.y },
+                        color: ghost.color
+                    }))
+                    lastPelletState = pellets.map(p => ({
+                        x: p.position.x, y: p.position.y, isDangerous: p.isDangerous
+                    }))
+
+                    // STARTA RYMDEN
+                    villains = initSpaceLevel({
+                        c, canvas, player, boundaries, pellets, powerUps, ghosts, keys, animate
+                    })
+                }
+            }
         } else if (boundary.type === 'block') {
             boundary.image = boundary.originalImage
         }
@@ -435,49 +448,13 @@ function animate() {
         }
 
         boundary.draw()
-
-        if (player.physicsMode !== 'SPACE' && circleCollidesWithRectangle({ circle: player, rectangle: boundary })) {
-            if (boundary.isPortal && !gameState.hasVisitedExtraLevel) {
-
-                gameState.hasVisitedExtraLevel = true
-
-                lastMainPosition = {
-                    x: player.position.x,
-                    y: player.position.y
-                }
-
-                lastGhostPositions = ghosts.map(ghost => ({
-                    x: ghost.position.x,
-                    y: ghost.position.y,
-                    velocity: {
-                        x: ghost.velocity.x,
-                        y: ghost.velocity.y
-                    },
-                    color: ghost.color
-                }))
-
-                ghosts.forEach(ghost => {
-                    ghost.velocity.x = 0
-                    ghost.velocity.y = 0
-                })
-
-                lastPelletState = pellets.map(p => ({
-                    x: p.position.x,
-                    y: p.position.y,
-                    isDangerous: p.isDangerous
-                }))
-
-                startExtraLevel()
-            }
-        }     
     })
 
     player.update()
-
-    // Spelare krockar med spöke
     updateGhosts(ghosts, boundaries, player)
 
-    if (player.physicsMode != 'SPACE') {    
+    // Rotation för Pacman
+    if (player.physicsMode !== 'SPACE') {    
         if (player.velocity.x > 0) player.rotation = 0
         else if (player.velocity.x < 0) player.rotation = Math.PI
         else if (player.velocity.y > 0) player.rotation = Math.PI / 2
@@ -493,7 +470,7 @@ window.onload = async () => {
 
 setupInput({
     setNextDirection: (dir) => { nextDirection = dir },
-    isGameRunning: () => gameRunning,
+    isGameRunning: () => gameState.gameRunning,
     togglePause: togglePause,
     keys
 })
