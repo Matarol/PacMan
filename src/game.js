@@ -12,6 +12,7 @@ import { resolvePlayerGhostCollision, checkWin, gameState, damagePlayer } from '
 import { setupInput } from './inputHandler.js'
 import { updateVillain } from './villainController.js'
 import { initSpaceLevel, handleVillainEaten } from './spaceLevel.js'
+import { triggerPortalTimer, clearPortalTimers, checkPortalCollision } from './portalManager.js'
 
 const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
@@ -29,9 +30,6 @@ let ghosts = []
 let player
 let villains = []
 let winCount = 0
-let portalBoundary = null
-let portalTimer
-let portalClosingTimer
 let lastMainPosition = null
 let lastGhostPositions = []
 let lastPelletState = []
@@ -220,34 +218,14 @@ function handleGameOver(isWin) {
     gameState.health = 100
 }
 
-function triggerPortalTimer() {
-    if (gameState.hasVisitedExtraLevel) return
-    clearTimeout(portalTimer)
-
-    if (gameState.gameRunning) {
-        openRandomPortal()
-
-        const nextTick = Math.random() * 10000 + 10000
-
-        portalTimer = setTimeout(triggerPortalTimer, nextTick)
-    }
-}
-
 async function init() {
     cancelAnimationFrame(gameState.animationId)
 
-    clearTimeout(portalTimer)
-    clearTimeout(portalClosingTimer)
+    clearPortalTimers()
 
     canvas.classList.remove('space-background')
 
     gameState.hasVisitedExtraLevel = false
-
-
-    if (portalBoundary) {
-        portalBoundary.isPortal = false
-        portalBoundary = null
-    }
 
     await drawStaticMap()
 
@@ -257,7 +235,7 @@ async function init() {
     streakScoreEl.innerText = gameState.streakScore
     highScoreEl.innerText = gameState.highScore
 
-    setTimeout(triggerPortalTimer, 10000);
+    setTimeout(() => triggerPortalTimer(boundaries), 10000);
 
     ghosts = [
         new Ghost({
@@ -415,30 +393,7 @@ function animate() {
             // Animera portal-bilden
             const frame = Math.floor(Date.now() / 150) % portalImages.length
             boundary.image = portalImages[frame]
-
-            // KOLLA OM SPELAREN GÅR IN I PORTALEN
-            if (player.physicsMode !== 'SPACE' && !gameState.hasVisitedExtraLevel) {
-                if (circleCollidesWithRectangle({ circle: player, rectangle: boundary })) {
-                    
-                    gameState.hasVisitedExtraLevel = true
-
-                    // Spara snapshot
-                    lastMainPosition = { x: player.position.x, y: player.position.y }
-                    lastGhostPositions = ghosts.map(ghost => ({
-                        x: ghost.position.x, y: ghost.position.y,
-                        velocity: { x: ghost.velocity.x, y: ghost.velocity.y },
-                        color: ghost.color
-                    }))
-                    lastPelletState = pellets.map(p => ({
-                        x: p.position.x, y: p.position.y, isDangerous: p.isDangerous
-                    }))
-
-                    // STARTA RYMDEN
-                    villains = initSpaceLevel({
-                        c, canvas, player, boundaries, pellets, powerUps, ghosts, keys, animate
-                    })
-                }
-            }
+            
         } else if (boundary.type === 'block') {
             boundary.image = boundary.originalImage
         }
@@ -449,6 +404,27 @@ function animate() {
 
         boundary.draw()
     })
+
+    const collidePortal = checkPortalCollision(player, boundaries)
+    if (collidePortal) {
+        gameState.hasVisitedExtraLevel = true;
+
+        // Spara snapshot
+        lastMainPosition = { x: player.position.x, y: player.position.y };
+        lastGhostPositions = ghosts.map(ghost => ({
+            x: ghost.position.x, y: ghost.position.y,
+            velocity: { x: ghost.velocity.x, y: ghost.velocity.y },
+            color: ghost.color
+        }));
+        lastPelletState = pellets.map(p => ({
+            x: p.position.x, y: p.position.y, isDangerous: p.isDangerous
+        }));
+
+        // STARTA RYMDEN
+        villains = initSpaceLevel({
+            c, canvas, player, boundaries, pellets, powerUps, ghosts, keys, animate
+        });
+    }
 
     player.update()
     updateGhosts(ghosts, boundaries, player)
