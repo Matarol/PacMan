@@ -226,7 +226,7 @@ function handleVillainEaten(eatenVillain) {
                 }, {
                     score: totalBonus // Skickar med bonusen till menyn
                 })
-            }, 1000)
+            }, 1800)
         }
     }, 50)
 }
