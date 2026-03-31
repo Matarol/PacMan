@@ -4,14 +4,14 @@ import { Ghost } from './ghost.js'
 import { Villain } from './villain.js'
 import { Boundary } from './boundary.js'
 import { Pellet } from './items.js'
-import { map, renderMap, portalImages } from './map.js'
+import { classicMap, renderClassicMap, portalImages } from './classicMap.js'
 import { circleCollidesWithCircle, circleCollidesWithRectangle, getRepulsionVelocity, getCircleRepulsion } from './collision.js'
 import { handlePlayerMovement, handleSpaceMovement } from './playerController.js'
 import { updateGhosts } from './ghostController.js'
 import { updateItems } from './itemsController.js'
 import { resolvePlayerGhostCollision, checkWin, gameState, damagePlayer } from './gameState.js'
 import { setupInput } from './inputHandler.js'
-import { mapExtra1, renderSpaceMap } from './map-extra-1.js'
+import { mapExtra1, renderSpaceMap } from './spaceMap.js'
 import { updateVillain } from './villainController.js'
 import { FloatingText } from './floatingText.js'
 
@@ -51,14 +51,21 @@ const keys = {
     d: { pressed: false }
 }
 
+const gameController = {
+    get gameRunning() { return gameRunning },
+    set gameRunning(val) { gameRunning = val },
+    get animationId() { return animationId },
+    animate: animate
+}
+
 let currentDirection = null
 let nextDirection = null
 
 async function drawStaticMap() {
     const dpr = window.devicePixelRatio || 1;
 
-    const logicalWidth = map[0].length * Boundary.width;
-    const logicalHeight = map.length * Boundary.height;
+    const logicalWidth = classicMap[0].length * Boundary.width;
+    const logicalHeight = classicMap.length * Boundary.height;
 
     const scale = Math.min(window.innerWidth / logicalWidth, 1);
 
@@ -78,7 +85,7 @@ async function drawStaticMap() {
     pellets.length = 0;
     powerUps.length = 0;
 
-    renderMap({c, pellets, powerUps, boundaries})
+    renderClassicMap({c, pellets, powerUps, boundaries})
 
     const imagePromises = boundaries.map(b => b.image).filter(img => img instanceof HTMLImageElement).map(img => img.decode().catch(() => {}))
 
@@ -127,122 +134,6 @@ function openRandomPortal() {
     }
 }
 
-function startExtraLevel() {
-
-    keys.w.pressed = false
-    keys.a.pressed = false
-    keys.s.pressed = false
-    keys.d.pressed = false
-
-    canvas.classList.add('space-background')
-
-    gameRunning = false
-    cancelAnimationFrame(animationId)
-
-    boundaries.length = 0
-    pellets.length = 0
-    powerUps.length = 0
-    ghosts.length = 0
-
-    renderSpaceMap({c, pellets, boundaries, powerUps})
-
-    player.physicsMode = 'SPACE'
-
-    const pacmanStart = findStartPos(mapExtra1, 'p')
-    const villainStart = findStartPos(mapExtra1, 'v')
-
-    player.position.x = pacmanStart.x * Boundary.width + Boundary.width /2
-    player.position.y = pacmanStart.y * Boundary.height + Boundary.height /2
-    player.velocity.x = 0
-    player.velocity.y = 0
-
-    //placeholder för initiering av skurkPacman
-    villains = [new Villain({
-        position: {
-            x: villainStart.x * Boundary.width + Boundary.width /2,
-            y: villainStart.y * Boundary.height + Boundary.height /2
-        },
-        velocity: { x: 0, y: 0},
-        context: c
-    })]
-
-    setInterval(() => {
-        if (player.physicsMode === 'SPACE') {
-            openExitPortal(pellets)
-        }
-    }, Math.random() * 7000 + 8000)
-
-
-    setTimeout(() => {
-        gameRunning = true
-        animate()
-    }, 1000)
-}
-
-function handleVillainEaten(eatenVillain) {
-    // 1. Stoppa spelet
-    gameRunning = false 
-
-    // 2. Skapa effekten för skurken
-    activeEffects.push(new FloatingText({
-        x: eatenVillain.position.x,
-        y: eatenVillain.position.y,
-        text: '+500',
-        color: '#f863d5'
-    }))
-
-    // 3. Beräkna bonus och uppdatera poäng
-    const pelletBonus = pellets.length * 10
-    const totalBonus = 500 + pelletBonus
-    score.value += totalBonus
-    scoreEl.innerText = score.value
-
-    // 4. "Sug in" pellets visuellt
-    const drainInterval = setInterval(() => {
-        if (pellets.length > 0) {
-            const p = pellets.pop()
-            activeEffects.push(new FloatingText({
-                x: p.position.x,
-                y: p.position.y,
-                text: '+10',
-                color: 'white'
-            }))
-        } else {
-            clearInterval(drainInterval)
-            
-            // 5. NÄR ALLA PELLETS ÄR KLARA: Visa menyn!
-            // Vi lägger en liten delay så man hinner se sista effekten
-            setTimeout(() => {
-                cancelAnimationFrame(animationId) // Stoppa loopen helt
-                
-                showMenu('BONUSLVLCOMPLETE', {
-                    resumeGame: () => {
-                        gameState.hasVisitedExtraLevel = true
-                        activeEffects = []
-                        villains = []
-                        returnToMainMap()
-                    },
-                    resetToMain: () => location.reload()
-                }, {
-                    score: totalBonus // Skickar med bonusen till menyn
-                })
-            }, 1800)
-        }
-    }, 50)
-}
-
-//Hjälpfunktion för att hitta startposition for PacMan och SkurkPacMan i mapExtra1-banan
-function findStartPos(mapArray, symbol) {
-    for (let i = 0; i < mapArray.length; i++) {
-        for (let j = 0; j < mapArray[i].length; j++) {
-            if (mapArray[i][j] === symbol) {
-                return { x: j, y: i }
-            }
-        }
-    }
-    return { x: 5, y: 5 } //Fallback
-}
-
 function returnToMainMap() {
     cancelAnimationFrame(animationId)
 
@@ -250,7 +141,7 @@ function returnToMainMap() {
     pellets.length = 0
     powerUps.length = 0
 
-    renderMap({ c, pellets, powerUps, boundaries })
+    renderClassicMap({ c, pellets, powerUps, boundaries })
 
     player.physicsMode = 'NORMAL'
 
@@ -297,19 +188,7 @@ function returnToMainMap() {
     }, 100)
 }
 
-function openExitPortal(pellets) {
-    const dangerousPellets = pellets.filter(p => p.isDangerous)
 
-    if (dangerousPellets.length === 0) return
-
-    const random = dangerousPellets[Math.floor(Math.random() * dangerousPellets.length)]
-
-    random.isPortal = true
-
-    random.portalTimer = setTimeout(() => {
-        random.isPortal = false
-    }, 3000)
-}
 
 function togglePause() {
     if (gameRunning) {

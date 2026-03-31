@@ -10,7 +10,7 @@ export const portalImages = [
     createImage('../assets/img/portal_block_5.png')
 ]
 
-export const map = [
+export const classicLayout = [
     ['1', '-', '-', '-', '-', '-', '-', '-', '-', '-', '2'],
     ['|', '.', '.', '.', '.', '.', '.', '.', '.', '.', '|'],    
     ['|', '.', 'b', '.', '[', '7', ']', '.', 'b', '.', '|'],
@@ -32,8 +32,8 @@ export function createImage(src) {
     return image
 }
 
-export function renderMap({c, pellets, powerUps, boundaries}) {
-    map.forEach((row, i) => {
+export function renderClassicMap({c, pellets, powerUps, boundaries}) {
+    classicLayout.forEach((row, i) => {
         row.forEach((symbol, j) => {
             const position = {
                 x: Boundary.width * j,
@@ -149,7 +149,7 @@ export function renderMap({c, pellets, powerUps, boundaries}) {
                         y: position.y + Boundary.height / 2
                     },
                     context: c,
-                    isDangerous: true, // Vi måste lägga till detta i Pellet-klassen
+                    isDangerous: true,
                     color: 'red' // Gör dem röda så de ser farliga ut
                 })); break;
             }
