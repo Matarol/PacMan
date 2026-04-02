@@ -1,4 +1,6 @@
-﻿export class Boundary {
+﻿import { portalImages } from "./classicMap.js";
+
+export class Boundary {
     static width = 40
     static height = 40
 
@@ -16,20 +18,37 @@
         this.type = type
         this.isPortal = false
         this.c = context
-        this.currentFrame = 0
+        this.portalFrame = 0
+        this.animationSpeed = 0.1
     }
 
     draw() {
-        if (!this.c || !this.image) return
+        if (!this.c) return
 
         try {
+            // 🌀 Om detta block just nu är en aktiv portal
+            if (this.isPortal && portalImages.length > 0) {
+                // Animera genom att stega framåt i arrayen (0-4)
+                this.portalFrame += this.animationSpeed
+                const frameIndex = Math.floor(this.portalFrame) % portalImages.length
+                const currentPortalImg = portalImages[frameIndex]
+
+                if (currentPortalImg.complete) {
+                    this.c.drawImage(currentPortalImg, this.position.x, this.position.y, this.width, this.height)
+                } else {
+                    this.c.fillStyle = '#9b59b6'
+                    this.c.fillRect(this.position.x, this.position.y, this.width, this.height)
+                }
+                return 
+            }
+
+            // ☄️ Logik för asteroider (Rymdbanan)
             if (this.type === 'asteroid') {
                 const row = Math.floor(this.currentFrame / 4)
                 const col = this.currentFrame % 4
 
                 this.c.save()
                 this.c.globalCompositeOperation = 'Screen'
-
                 this.c.drawImage(
                     this.image,
                     col * 256,
@@ -38,18 +57,20 @@
                     256,
                     this.position.x,
                     this.position.y,
-                    40,
-                    40
+                    this.width,
+                    this.height
                 )
                 this.c.restore()
             } else {
-                this.c.drawImage(this.image, this.position.x, this.position.y)
+                // 🧱 Vanlig vägg (Klassiska banan)
+                if (this.image) {
+                    this.c.drawImage(this.image, this.position.x, this.position.y)
+                }
             }
         } catch (error) {
             this.c.fillStyle = 'red'
-            this.c.fillRect(this.position.x, this.position.y, 40, 40)
-            console.warn('Kunde inte rita boundary, error')
+            this.c.fillRect(this.position.x, this.position.y, this.width, this.height)
+            console.warn('Kunde inte rita boundary', error)
         }
-
     }
 }

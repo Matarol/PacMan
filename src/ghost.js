@@ -73,6 +73,6 @@
         if (this.velocity.y > 0) this.eyesOffsetY = 1.5
         else if (this.velocity.y < 0) this.eyesOffsetY = -1.5
 
-        this.draw()
+        // this.draw()
     }
 }

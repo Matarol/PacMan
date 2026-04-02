@@ -55,6 +55,6 @@
             this.eyesOffsetY = -3
         }
 
-        this.draw()
+        // this.draw()
     }
 }

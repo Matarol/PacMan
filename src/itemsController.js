@@ -7,7 +7,7 @@ export function updateItems({player, pellets, powerUps, ghosts, villains, scoreE
     // Spelare krockar med powerUps
     for (let i = powerUps.length - 1; i >= 0; i-- ) {
         const powerUp = powerUps[i]
-        powerUp.draw()
+        // powerUp.draw()
 
         if (circleCollidesWithCircle(powerUp, player)) {
             if (player.physicsMode === 'SPACE') {
@@ -26,7 +26,7 @@ export function updateItems({player, pellets, powerUps, ghosts, villains, scoreE
     for (let i = pellets.length - 1; 0 <= i; i-- ) {
         const pellet = pellets[i]
     
-        pellet.draw()
+        // pellet.draw()
 
         if (circleCollidesWithCircle(pellet, player)) {
             if (pellet.isPortal) {

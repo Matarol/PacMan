@@ -12,16 +12,13 @@ import { resolvePlayerGhostCollision, checkWin, gameState, damagePlayer } from '
 import { setupInput } from './inputHandler.js'
 import { updateVillain } from './villainController.js'
 import { initSpaceLevel, handleVillainEaten } from './spaceLevel.js'
-import { triggerPortalTimer, clearPortalTimers, checkPortalCollision } from './portalManager.js'
+import { handlePortalEntry, triggerPortalTimer, clearPortalTimers, checkPortalCollision } from './portalManager.js'
+import { updateUI, hideUIOverlay } from './uiManager.js'
+import { updateClassicMode, updateSpaceMode } from './gameLoopController.js'
+import { renderLevel } from './renderLevel.js'
 
 const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
-
-const scoreEl = document.getElementById('scoreEl')
-const streakScoreEl = document.getElementById('streakScoreEl')
-const highScoreEl = document.getElementById('highScoreEl')
-
-const mobileButtons = document.querySelectorAll('#mobileControls button')
 
 let pellets = []
 let powerUps = []
@@ -79,43 +76,6 @@ async function drawStaticMap() {
     boundaries.forEach(boundary => boundary.draw())
     pellets.forEach(pellet => pellet.draw())
     powerUps.forEach(powerUp => powerUp.draw())
-}
-
-function updateHealthBar() {
-    const bar = document.getElementById('healthBar')
-    bar.style.width = gameState.health + '%'
-
-    if (gameState.health < 30) {
-        bar.style.background = 'red'
-    } else {
-        bar.style.background = 'lime'
-    }
-}
-
-function openRandomPortal() {
-    if (portalBoundary) {
-        portalBoundary.isPortal = false
-    }
-
-    const candidates = boundaries.filter(b => b.type === 'block')
-
-    if (candidates.length > 0) {
-        const randomIndex = Math.floor(Math.random() * candidates.length)
-        const selectedBoundary = candidates[randomIndex]
-
-        selectedBoundary.isPortal = true
-        portalBoundary = selectedBoundary
-
-        console.log('En portal har öppnats')
-
-        portalClosingTimer = setTimeout(() => {
-            if (selectedBoundary === portalBoundary) {
-                selectedBoundary.isPortal = false
-                portalBoundary = null
-                console.log('Portalen har stängts')
-            }
-        }, 5000)
-    }
 }
 
 function returnToMainMap() {
@@ -186,7 +146,7 @@ function togglePause() {
         })
     } else {
         gameState.gameRunning = true
-        document.getElementById('ui-overlay').classList.add('hidden')
+        hideUIOverlay()
         animate()
     }
 }
@@ -231,9 +191,7 @@ async function init() {
 
     gameState.gameRunning = true
     gameState.score = 0
-    scoreEl.innerText = gameState.score
-    streakScoreEl.innerText = gameState.streakScore
-    highScoreEl.innerText = gameState.highScore
+    updateUI(gameState)
 
     setTimeout(() => triggerPortalTimer(boundaries), 10000);
 
@@ -297,7 +255,7 @@ async function init() {
 
 function animate() {
     gameState.animationId = requestAnimationFrame(animate)
-    c.clearRect(0, 0, canvas.width, canvas.height)
+    // c.clearRect(0, 0, canvas.width, canvas.height)
 
     // 1. Rendera effekter (poängtexter etc)
     activeEffects.forEach((effect, index) => {
@@ -305,78 +263,25 @@ function animate() {
             activeEffects.splice(index, 1)
         } else {
             effect.update()
-            effect.draw(c)
         }
     })
 
-    // 2. RYMDBANAN (Om vi är i rymden)
+    // 2. KÖR LOGIK BEROENDE AV FYSIKMODE
     if (player.physicsMode === 'SPACE' && villains) {
-        handleSpaceMovement(player, keys, boundaries)
+        updateSpaceMode({ player, villains, boundaries, keys, gameState, pellets, scoreEl: document.getElementById('scoreEl'), activeEffects, showMenu, returnToMainMap, handleGameOver })
 
-        boundaries.forEach(boundary => {
-            if (boundary.type === 'asteroid') {
-                const asteroid = {
-                    position: {
-                        x: boundary.position.x + boundary.width / 2,
-                        y: boundary.position.y + boundary.height / 2
-                    },
-                    radius: 15
-                }
-                const pPush = getCircleRepulsion(player, asteroid)
-                player.position.x += pPush.x
-                player.position.y += pPush.y
-
-                if (Math.hypot(pPush.x, pPush.y) > 0.4) {
-                    damagePlayer(5, gameState)
-                    updateHealthBar()
-                }
-
-                villains.forEach(v => {
-                    const vPush = getCircleRepulsion(v, asteroid)
-                    v.position.x += vPush.x
-                    v.position.y += vPush.y
-                })
-            }
-        })
-
-        for (let i = villains.length - 1; i >= 0; i--) {
-            const v = villains[i]
-            updateVillain(v, player, boundaries)
-
-            if (circleCollidesWithCircle(player, v)) {
-                if (v.miniature) {
-                    const savedVillain = { ...v }
-                    villains.splice(i, 1)
-                    // HÄR ANVÄNDER VI DEN NYA EXPORTERADE FUNKTIONEN
-                    handleVillainEaten({
-                        eatenVillain: savedVillain,
-                        pellets, scoreEl, activeEffects, showMenu, gameState, returnToMainMap
-                    })
-                    return
-                } else {
-                    damagePlayer(15, gameState)
-                    updateHealthBar()
-                }
-            }
-        }
-
-        if (gameState.health <= 0) {
-            handleGameOver(false)
-            return
-        }
-    } 
-    // 3. VANLIGA BANAN
-    else {
-        const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries)
+    } else {
+        const result = updateClassicMode({ player, currentDirection, nextDirection, boundaries })
         currentDirection = result.currentDirection
         nextDirection = result.nextDirection
+
     }
 
-    // 4. KOLLISIONER & ITEMS
+    // 3. KOLLISIONER & ITEMS (gemensamt för båda lägena)
     const collisionResult = resolvePlayerGhostCollision(player, ghosts)
-    const itemResult = updateItems({player, pellets, powerUps, ghosts, villains, scoreEl, returnToMainMap, damagePlayer, gameState})
+    const itemResult = updateItems({ player, pellets, powerUps, ghosts, villains, scoreEl: document.getElementById('scoreEl'), returnToMainMap, damagePlayer, gameState })
 
-    if (itemResult?.result === 'player_damaged') updateHealthBar()
+    if (itemResult?.result === 'player_damaged') updateUI(gameState)
 
     if (collisionResult.result === 'player_dead' || gameState.health <= 0) {
         handleGameOver(false)
@@ -387,55 +292,59 @@ function animate() {
         handleGameOver(true)
     }
     
-    // 5. RITA BANAN OCH SKÖTA PORTALER
-    boundaries.forEach((boundary) => {
-        if (boundary.isPortal) {
-            // Animera portal-bilden
-            const frame = Math.floor(Date.now() / 150) % portalImages.length
-            boundary.image = portalImages[frame]
-            
-        } else if (boundary.type === 'block') {
-            boundary.image = boundary.originalImage
-        }
+    // 4. RITA BANAN OCH SKÖTA PORTALER
 
-        if (boundary.type === 'asteroid') {
-            boundary.currentFrame = Math.floor(Date.now() / 100) % Boundary.totalFrames
-        }
+    // 4. RITA BANAN OCH SKÖTA PORTALER
+    const collidePortal = checkPortalCollision(player, boundaries);
 
-        boundary.draw()
-    })
-
-    const collidePortal = checkPortalCollision(player, boundaries)
     if (collidePortal) {
-        gameState.hasVisitedExtraLevel = true;
+        // Här skapar vi det objekt som handlePortalEntry förväntar sig
+        const config = {
+            player,
+            ghosts,
+            pellets,
+            powerUps,
+            keys,
+            animate,
+            canvas,
+            c,
+            initSpaceLevel,
+            gameState,
+            boundaries
+        };
 
-        // Spara snapshot
-        lastMainPosition = { x: player.position.x, y: player.position.y };
-        lastGhostPositions = ghosts.map(ghost => ({
-            x: ghost.position.x, y: ghost.position.y,
-            velocity: { x: ghost.velocity.x, y: ghost.velocity.y },
-            color: ghost.color
-        }));
-        lastPelletState = pellets.map(p => ({
-            x: p.position.x, y: p.position.y, isDangerous: p.isDangerous
-        }));
+        const portalResult = handlePortalEntry(config);
 
-        // STARTA RYMDEN
-        villains = initSpaceLevel({
-            c, canvas, player, boundaries, pellets, powerUps, ghosts, keys, animate
-        });
+        if (portalResult) {
+            lastMainPosition = portalResult.lastMainPosition;
+            lastGhostPositions = portalResult.lastGhostPositions;
+            lastPelletState = portalResult.lastPelletState;
+            villains = portalResult.villains;
+
+            // VIKTIGT: Vi avbryter loopen här eftersom vi byter nivå
+            return; 
+        }
     }
 
+    // 🔥 NYTT: UPDATE ENTITIES
     player.update()
     updateGhosts(ghosts, boundaries, player)
+    villains.forEach(villain => villain.update())
 
-    // Rotation för Pacman
-    if (player.physicsMode !== 'SPACE') {    
-        if (player.velocity.x > 0) player.rotation = 0
-        else if (player.velocity.x < 0) player.rotation = Math.PI
-        else if (player.velocity.y > 0) player.rotation = Math.PI / 2
-        else if (player.velocity.y < 0) player.rotation = Math.PI * 1.5
-    }
+    // game.js inuti animate()
+
+        renderLevel({
+        c,
+        canvas,
+        player,
+        ghosts,
+        villains,
+        pellets,
+        powerUps,
+        boundaries,
+        activeEffects
+    });
+
 } //end of animate
 
 window.onload = async () => {
