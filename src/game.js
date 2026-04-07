@@ -3,15 +3,13 @@ import { Player } from './player.js'
 import { Ghost } from './ghost.js'
 import { Boundary } from './boundary.js'
 import { Pellet } from './items.js'
-import { classicLayout, renderClassicMap, portalImages } from './classicMap.js'
-import { circleCollidesWithCircle, circleCollidesWithRectangle, getCircleRepulsion } from './collision.js'
-import { handlePlayerMovement, handleSpaceMovement } from './playerController.js'
+import { classicLayout } from './classicMap.js'
+import { initClassicLevel } from './classicLevel.js'
 import { updateGhosts } from './ghostController.js'
 import { updateItems } from './itemsController.js'
 import { resolvePlayerGhostCollision, checkWin, gameState, damagePlayer } from './gameState.js'
 import { setupInput } from './inputHandler.js'
-import { updateVillain } from './villainController.js'
-import { initSpaceLevel, handleVillainEaten } from './spaceLevel.js'
+import { initSpaceLevel } from './spaceLevel.js'
 import { handlePortalEntry, triggerPortalTimer, clearPortalTimers, checkPortalCollision } from './portalManager.js'
 import { updateUI, hideUIOverlay } from './uiManager.js'
 import { updateClassicMode, updateSpaceMode } from './gameLoopController.js'
@@ -66,16 +64,16 @@ async function drawStaticMap() {
     pellets.length = 0;
     powerUps.length = 0;
 
-    renderClassicMap({c, pellets, powerUps, boundaries})
+    initClassicLevel({ pellets, powerUps, boundaries, ghosts, player })
 
     const imagePromises = boundaries.map(b => b.image).filter(img => img instanceof HTMLImageElement).map(img => img.decode().catch(() => {}))
 
     await Promise.all(imagePromises)
 
     c.clearRect(0, 0, canvas.width, canvas.height)
-    boundaries.forEach(boundary => boundary.draw())
-    pellets.forEach(pellet => pellet.draw())
-    powerUps.forEach(powerUp => powerUp.draw())
+    boundaries.forEach(boundary => boundary.draw(c))
+    pellets.forEach(pellet => pellet.draw(c))
+    powerUps.forEach(powerUp => powerUp.draw(c))
 }
 
 function returnToMainMap() {
@@ -85,7 +83,7 @@ function returnToMainMap() {
     pellets.length = 0
     powerUps.length = 0
 
-    renderClassicMap({ c, pellets, powerUps, boundaries })
+    initClassicLevel({ pellets, powerUps, boundaries, ghosts, player })
 
     player.physicsMode = 'NORMAL'
 
@@ -204,8 +202,7 @@ async function init() {
             velocity: {
                 x: Ghost.speed,
                 y: 0
-            },
-            context: c
+            }
         }),
 
         new Ghost({
@@ -217,8 +214,7 @@ async function init() {
                 x: Ghost.speed,
                 y: 0
             },
-            color: 'red',
-            context: c
+            color: 'red'
         })        
     ]
 
@@ -233,8 +229,7 @@ async function init() {
                 x: Ghost.speed,
                 y: 0
             },
-            color: 'pink',
-            context: c
+            color: 'pink'
         })    
         )
     }
@@ -247,8 +242,7 @@ async function init() {
         velocity: {
             x: 0,
             y: 0
-        },
-            context: c
+        }
     })
     animate()
 }
@@ -329,7 +323,7 @@ function animate() {
     // 🔥 NYTT: UPDATE ENTITIES
     player.update()
     updateGhosts(ghosts, boundaries, player)
-    villains.forEach(villain => villain.update())
+    // villains.forEach(villain => villain.update())
 
     // game.js inuti animate()
 

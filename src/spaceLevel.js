@@ -1,6 +1,6 @@
 import { Boundary } from "./boundary.js";
 import { Villain } from "./villain.js";
-import { spaceLayout, renderSpaceMap } from "./spaceMap.js";
+import { spaceLayout, buildSpaceMap } from "./spaceMap.js";
 import { FloatingText } from "./floatingText.js";
 import { gameState } from "./gameState.js";
 
@@ -44,7 +44,7 @@ export function initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUp
     ghosts.length = 0;
 
     //Bygg banan
-    renderSpaceMap({c, pellets, boundaries, powerUps});
+    buildSpaceMap({c, pellets, boundaries, powerUps});
 
     //Placera spelaren
     player.physicsMode = 'SPACE';
@@ -62,8 +62,7 @@ export function initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUp
             x: villainStart.x * Boundary.width + Boundary.width /2,
             y: villainStart.y * Boundary.height + Boundary.height /2
         },
-        velocity: { x: 0, y: 0},
-        context: c
+        velocity: { x: 0, y: 0}
     })];
 
     const portalInterval = setInterval(() => {

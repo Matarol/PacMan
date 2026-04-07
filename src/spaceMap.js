@@ -20,7 +20,7 @@ export const spaceLayout = [
     ['4', '-', '-', '-', '-', '-', '-', '-', '-', '-', '3']
 ]
 
-export function renderSpaceMap({c, pellets, powerUps, boundaries}) {
+export function buildSpaceMap({c, pellets, powerUps, boundaries}) {
     spaceLayout.forEach((row, i) => {
         row.forEach((symbol, j) => {
             const position = {

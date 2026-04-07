@@ -1,6 +1,6 @@
 ﻿export class Ghost {
     static speed = 2
-    constructor({position, velocity, color = 'green', context}) {
+    constructor({position, velocity, color = 'green'}) {
         this.position = position
         this.velocity = velocity
         this.radius = 15
@@ -10,54 +10,53 @@
         this.scared = false
         this.eyesOffsetX = 0
         this.eyesOffsetY = 0
-        this.c = context
     }
 
-    draw() {
+    draw(c) {
         //Spökets kropp
-        this.c.beginPath()
-        this.c.arc(this.position.x, this.position.y, this.radius, Math.PI, 0)
-        this.c.lineTo(this.position.x + this.radius, this.position.y + this.radius)
+        c.beginPath()
+        c.arc(this.position.x, this.position.y, this.radius, Math.PI, 0)
+        c.lineTo(this.position.x + this.radius, this.position.y + this.radius)
         for (let i = 0; i <= 4; i++) {
             const waveWidth = this.radius / 2
-            this.c.lineTo(
+            c.lineTo(
             this.position.x + this.radius - i * waveWidth,
             this.position.y + this.radius + (i % 2 === 0 ? 5 : 0)
             )
         }
-        this.c.lineTo(this.position.x - this.radius, this.position.y)
-        this.c.fillStyle = this.scared ? 'blue' : this.color
-        this.c.fill()
-        this.c.closePath()
+        c.lineTo(this.position.x - this.radius, this.position.y)
+        c.fillStyle = this.scared ? 'blue' : this.color
+        c.fill()
+        c.closePath()
 
         //Spökets ögon
-        this.c.beginPath()
-        this.c.arc(this.position.x + 5, this.position.y + 5, 3, Math.PI, 0)
-        this.c.lineTo(this.position.x + 8, this.position.y + 5)
-        this.c.arc(this.position.x + 5, this.position.y + 7, 3, 0, Math.PI)
-        this.c.closePath()
-        this.c.fillStyle = 'white'
-        this.c.fill()
+        c.beginPath()
+        c.arc(this.position.x + 5, this.position.y + 5, 3, Math.PI, 0)
+        c.lineTo(this.position.x + 8, this.position.y + 5)
+        c.arc(this.position.x + 5, this.position.y + 7, 3, 0, Math.PI)
+        c.closePath()
+        c.fillStyle = 'white'
+        c.fill()
 
-        this.c.beginPath()
-        this.c.arc(this.position.x + 5 + this.eyesOffsetX, this.position.y + 6 + this.eyesOffsetY, 2, 0, Math.PI * 2)
-        this.c.closePath()
-        this.c.fillStyle = 'black'
-        this.c.fill()        
+        c.beginPath()
+        c.arc(this.position.x + 5 + this.eyesOffsetX, this.position.y + 6 + this.eyesOffsetY, 2, 0, Math.PI * 2)
+        c.closePath()
+        c.fillStyle = 'black'
+        c.fill()        
 
-        this.c.beginPath()
-        this.c.arc(this.position.x + -5, this.position.y + 5, 3, Math.PI, 0)
-        this.c.lineTo(this.position.x -2, this.position.y + 5)
-        this.c.arc(this.position.x + -5, this.position.y + 7, 3, 0, Math.PI)
-        this.c.closePath()
-        this.c.fillStyle = 'white'
-        this.c.fill()
+        c.beginPath()
+        c.arc(this.position.x + -5, this.position.y + 5, 3, Math.PI, 0)
+        c.lineTo(this.position.x -2, this.position.y + 5)
+        c.arc(this.position.x + -5, this.position.y + 7, 3, 0, Math.PI)
+        c.closePath()
+        c.fillStyle = 'white'
+        c.fill()
 
-        this.c.beginPath()
-        this.c.arc(this.position.x + -5 + this.eyesOffsetX, this.position.y + 6 + this.eyesOffsetY, 2, 0, Math.PI * 2)
-        this.c.closePath()
-        this.c.fillStyle = 'black'
-        this.c.fill()
+        c.beginPath()
+        c.arc(this.position.x + -5 + this.eyesOffsetX, this.position.y + 6 + this.eyesOffsetY, 2, 0, Math.PI * 2)
+        c.closePath()
+        c.fillStyle = 'black'
+        c.fill()
     }
 
     update() {        

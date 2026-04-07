@@ -1,15 +1,14 @@
 ﻿export class Pellet {
-    constructor({ position, context, color, isDangerous = false }) {
+    constructor({ position, color, isDangerous = false }) {
         this.position = position
         this.baseRadius = isDangerous ? 4 : 3
-        this.c = context
         this.isDangerous = isDangerous
         this.color = color || (isDangerous ? 'red' : 'white')
         this.isPortal = false
         this.portalTimer = null
     }
 
-    draw() {
+    draw(c) {
         const time = Date.now() / 150
 
         let radius = this.baseRadius
@@ -26,10 +25,10 @@
             color = `rgb(${red}, 50, 50)`
 
             // ✨ Glow-effekt
-            this.c.shadowBlur = 15
-            this.c.shadowColor = color
+            c.shadowBlur = 15
+            c.shadowColor = color
         } else {
-            this.c.shadowBlur = 0
+            c.shadowBlur = 0
         }
 
         if (this.isPortal) {
@@ -38,34 +37,33 @@
             radius += (Math.sin(t) + 1) * 2
             color = 'cyan'
 
-            this.c.shadowBlur = 20
-            this.c.shadowColor = 'cyan'
+            c.shadowBlur = 20
+            c.shadowColor = 'cyan'
         }
 
         this.radius = radius
 
-        this.c.beginPath()
-        this.c.arc(this.position.x, this.position.y, radius, 0, Math.PI * 2)
-        this.c.fillStyle = color
-        this.c.fill()
-        this.c.closePath()
+        c.beginPath()
+        c.arc(this.position.x, this.position.y, radius, 0, Math.PI * 2)
+        c.fillStyle = color
+        c.fill()
+        c.closePath()
     }
 }
 
 export class PowerUp {
-    constructor({position, context, color}) {
+    constructor({position, color}) {
         this.position = position
         this.radius = 8
-        this.c = context
         this.color = color || 'white'
     }
 
-    draw() {
-        this.c.beginPath()
-        this.c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2)
-        this.c.fillStyle = this.color
-        this.c.fill()
-        this.c.closePath()
+    draw(c) {
+        c.beginPath()
+        c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2)
+        c.fillStyle = this.color
+        c.fill()
+        c.closePath()
     }
 
 }

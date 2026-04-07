@@ -32,7 +32,7 @@ export function createImage(src) {
     return image
 }
 
-export function renderClassicMap({c, pellets, powerUps, boundaries}) {
+export function buildClassicMap({pellets, powerUps, boundaries}) {
     classicLayout.forEach((row, i) => {
         row.forEach((symbol, j) => {
             const position = {
@@ -42,105 +42,89 @@ export function renderClassicMap({c, pellets, powerUps, boundaries}) {
             switch (symbol) {
                 case '-': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/pipeHorizontal.png'),
-                    context: c
+                    image: createImage('../assets/img/pipeHorizontal.png')
                 }))
                 break
                 case '|': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/pipeVertical.png'),
-                    context: c
+                    image: createImage('../assets/img/pipeVertical.png')
                 }))
                 break
                 case '1': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/pipeCorner1.png'),
-                    context: c
+                    image: createImage('../assets/img/pipeCorner1.png')
                 }))
                 break
                 case '2': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/pipeCorner2.png'),
-                    context: c
+                    image: createImage('../assets/img/pipeCorner2.png')
                 }))
                 break
                 case '3': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/pipeCorner3.png'),
-                    context: c
+                    image: createImage('../assets/img/pipeCorner3.png')
                 }))
                 break
                 case '4': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/pipeCorner4.png'),
-                    context: c
+                    image: createImage('../assets/img/pipeCorner4.png')
                 }))
                 break
                 case 'b':
                     const boundary = new Boundary({
                         position: position,
-                        image: createImage('../assets/img/block.png'),
-                        context: c
+                        image: createImage('../assets/img/block.png')
                     })
                     boundary.type = 'block'
                     boundaries.push(boundary)
                 break
                 case '[': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/capLeft.png'),
-                    context: c
+                    image: createImage('../assets/img/capLeft.png')
                 }))
                 break
                 case '7': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/pipeConnectorBottom.png'),
-                    context: c
+                    image: createImage('../assets/img/pipeConnectorBottom.png')
                 }))
                 break
                 case ']': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/capRight.png'),
-                    context: c
+                    image: createImage('../assets/img/capRight.png')
                 }))
                 break
                 case '_': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/capBottom.png'),
-                    context: c
+                    image: createImage('../assets/img/capBottom.png')
                 }))
                 break
                 case '^': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/capTop.png'),
-                    context: c
+                    image: createImage('../assets/img/capTop.png')
                 }))
                 break
                 case '+': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/pipeCross.png'),
-                    context: c
+                    image: createImage('../assets/img/pipeCross.png')
                 }))
                 break
                 case '5': boundaries.push(new Boundary({
                     position: position,
-                    image: createImage('../assets/img/pipeConnectorTop.png'),
-                    context: c
+                    image: createImage('../assets/img/pipeConnectorTop.png')
                 }))
                 break
                 case '.': pellets.push(new Pellet({
                     position: {
                         x: Boundary.width * j + Boundary.width / 2,
                         y: Boundary.height * i + Boundary.height / 2
-                    },
-                    context: c
+                    }
                 }))
                 break
                 case 'p': powerUps.push(new PowerUp({
                     position: {
                         x: Boundary.width * j + Boundary.width / 2,
                         y: Boundary.height * i + Boundary.height / 2
-                    },
-                    context: c
+                    }
                 }))
                 break
                 case '!': pellets.push(new Pellet({
@@ -148,7 +132,6 @@ export function renderClassicMap({c, pellets, powerUps, boundaries}) {
                         x: position.x + Boundary.width / 2,
                         y: position.y + Boundary.height / 2
                     },
-                    context: c,
                     isDangerous: true,
                     color: 'red' // Gör dem röda så de ser farliga ut
                 })); break;
