@@ -4,7 +4,7 @@ import { updateVillain } from './villainController.js'
 import { circleCollidesWithCircle, getCircleRepulsion } from "./collision.js";
 import { damagePlayer } from "./gameState.js";
 import { updateUI } from "./uiManager.js";
-import { handleVillainEaten } from "./spaceLevel.js";
+import { handleVillainEaten } from "./villainController.js";
 
 export function updateSpaceMode({ player, villains, boundaries, keys, gameState, pellets, scoreEl, activeEffects, showMenu, returnToMainMap, handleGameOver }) {
     handleSpaceMovement(player, keys, boundaries);
@@ -58,7 +58,12 @@ export function updateSpaceMode({ player, villains, boundaries, keys, gameState,
 
 }
 
-export function updateClassicMode({ player, currentDirection, nextDirection, boundaries }) {
-    return handlePlayerMovement(player, currentDirection, nextDirection, boundaries);
+export function updateClassicMode({ player, ghosts, currentDirection, nextDirection, boundaries }) {
+
+    const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries);
+
+    updateGhosts(ghosts, boundaries, player);
+
+    return result;
 }
 

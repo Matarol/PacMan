@@ -5,7 +5,6 @@ import { Boundary } from './boundary.js'
 import { Pellet } from './items.js'
 import { classicLayout } from './classicMap.js'
 import { initClassicLevel } from './classicLevel.js'
-import { updateGhosts } from './ghostController.js'
 import { updateItems } from './itemsController.js'
 import { resolvePlayerGhostCollision, checkWin, gameState, damagePlayer } from './gameState.js'
 import { setupInput } from './inputHandler.js'
@@ -265,7 +264,7 @@ function animate() {
         updateSpaceMode({ player, villains, boundaries, keys, gameState, pellets, scoreEl: document.getElementById('scoreEl'), activeEffects, showMenu, returnToMainMap, handleGameOver })
 
     } else {
-        const result = updateClassicMode({ player, currentDirection, nextDirection, boundaries })
+        const result = updateClassicMode({ player, ghosts, currentDirection, nextDirection, boundaries })
         currentDirection = result.currentDirection
         nextDirection = result.nextDirection
 
@@ -322,7 +321,7 @@ function animate() {
 
     // 🔥 NYTT: UPDATE ENTITIES
     player.update()
-    updateGhosts(ghosts, boundaries, player)
+
     // villains.forEach(villain => villain.update())
 
     // game.js inuti animate()
