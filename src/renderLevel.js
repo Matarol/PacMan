@@ -4,10 +4,7 @@ export function renderLevel({ c, canvas, player, ghosts, villains, pellets, powe
     // 1. HANTERA BAKGRUND (Rensa skärmen)
     if (player.physicsMode === 'SPACE') {
         canvas.classList.add('space-background');
-        c.clearRect(0, 0, canvas.width, canvas.height);
-        // Skapar motion blur: ritar en nästan genomskinlig rektangel över föregående frame
-        // c.fillStyle = 'black'; 
-        // c.fillRect(0, 0, canvas.width, canvas.height);
+        c.clearRect(0, 0, canvas.width, canvas.height);        
     } else {
         canvas.classList.remove('space-background');
         // Klassiskt läge: Rensa allt helt

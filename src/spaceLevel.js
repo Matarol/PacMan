@@ -4,21 +4,6 @@ import { spaceLayout, buildSpaceMap } from "./spaceMap.js";
 import { gameState } from "./gameState.js";
 import { startExitPortalLoop } from "./portalManager.js";
 
-// Funktion som öppnar en portal på en slumpmässig farlig pellet
-
-// function openExitPortal(pellets) {
-//     const dangerousPellets = pellets.filter(p => p.isDangerous)
-
-//     if (dangerousPellets.length === 0) return
-
-//     const random = dangerousPellets[Math.floor(Math.random() * dangerousPellets.length)]
-
-//     random.isPortal = true
-
-//     random.portalTimer = setTimeout(() => {
-//         random.isPortal = false
-//     }, 3000)
-// }
 
 /**
  * Allt som rör initiering av rymdbanan samlas här
@@ -67,14 +52,6 @@ export function initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUp
     })];
 
     startExitPortalLoop(player, pellets)
-
-    // const portalInterval = setInterval(() => {
-    //     if (player.physicsMode === 'SPACE') {
-    //         openExitPortal(pellets);
-    //     } else {
-    //         clearInterval(portalInterval);
-    //     }
-    // }, Math.random() * 7000 + 8000);
 
     setTimeout(() => {
         gameState.gameRunning = true;

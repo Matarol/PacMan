@@ -1,5 +1,5 @@
 ﻿export class Player {
-    constructor({position, velocity, context}) {
+    constructor({position, velocity}) {
         this.position = position
         this.velocity = velocity
         this.radius = 15
@@ -30,12 +30,12 @@
         c.fill()
     }
 
-    update() {        
+    update(deltaTime) {        
         this.position.x += this.velocity.x
         this.position.y += this.velocity.y
 
         if (this.radians < 0 || this.radians > 0.75) this.openRate = -this.openRate
-        this.radians += this.openRate
+        this.radians += this.openRate * (deltaTime * 60) // Justera för frame rate
 
         if (this.velocity.x > 0) {
             this.eyesOffsetX = 3

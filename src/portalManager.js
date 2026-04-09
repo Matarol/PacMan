@@ -135,8 +135,4 @@ export function startExitPortalLoop(player, pellets) {
         }
     }, Math.random() * 7000 + 8000);
 
-    // setTimeout(() => {
-    //     gameState.gameRunning = true;
-    //     animate();
-    // }, 1000);
 }
