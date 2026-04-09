@@ -19,7 +19,7 @@ export class Boundary {
         this.isPortal = false
         this.portalFrame = 0
         this.asteroidFrame = 0
-        this.animationSpeed = 0.1
+        this.animationSpeed = 0.3
     }
 
     draw(c) {
