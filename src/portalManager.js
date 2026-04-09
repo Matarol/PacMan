@@ -4,7 +4,8 @@ import { circleCollidesWithRectangle } from "./collision.js";
 export const portalState = {
     portalBoundary: null,
     portalTimer: null,
-    portalClosingTimer: null
+    portalClosingTimer: null,
+    exitPortalInterval: null
 };
 
 export function openRandomPortal(boundaries) {
@@ -48,6 +49,9 @@ export function triggerPortalTimer(boundaries) {
 export function clearPortalTimers() {
     clearTimeout(portalState.portalTimer);
     clearTimeout(portalState.portalClosingTimer);
+    clearInterval(portalState.exitPortalInterval);
+
+    portalState.exitPortalInterval = null;
 
     if (portalState.portalBoundary) {
         portalState.portalBoundary.isPortal = false;
@@ -101,4 +105,38 @@ export function handlePortalEntry(config) {
         lastPelletState,
         villains
     };
+}
+
+// Funktion som öppnar portal i rymdbanan
+function openExitPortal(pellets) {
+    const dangerousPellets = pellets.filter(p => p.isDangerous)
+
+    if (dangerousPellets.length === 0) return
+
+    const random = dangerousPellets[Math.floor(Math.random() * dangerousPellets.length)]
+
+    random.isPortal = true
+
+    random.portalTimer = setTimeout(() => {
+        random.isPortal = false
+    }, 3000)
+}
+
+// Funktion för portal timer i rymdbanan
+export function startExitPortalLoop(player, pellets) {
+    clearInterval(portalState.exitPortalInterval)
+
+    portalState.exitPortalInterval = setInterval(() => {
+        if (player.physicsMode === 'SPACE') {
+            openExitPortal(pellets);
+        } else {
+            clearInterval(portalState.exitPortalInterval);
+            portalState.exitPortalInterval = null
+        }
+    }, Math.random() * 7000 + 8000);
+
+    // setTimeout(() => {
+    //     gameState.gameRunning = true;
+    //     animate();
+    // }, 1000);
 }
