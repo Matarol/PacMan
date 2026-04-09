@@ -81,6 +81,7 @@ function returnToMainMap() {
     boundaries.length = 0
     pellets.length = 0
     powerUps.length = 0
+    villains.length = 0
 
     initClassicLevel({ pellets, powerUps, boundaries, ghosts, player })
 
