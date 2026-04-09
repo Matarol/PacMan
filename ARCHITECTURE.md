@@ -51,3 +51,38 @@ HUD (Heads-Up Display): Uppdaterar poängsiffror samt healthbar
 
 6. Orchestrator (Dirigenten)
 game.js: Kör init() - startar allt - och animate() - håller takten. Hanterar övergångar mellan olika physicsMode och sköter level snapshots kopplade till dessa.
+
+När refactoring är färdig vill jag att koden skall följa denna struktur:
+
+src/
+│
+├── core/
+│   ├── game.js
+│   ├── gameState.js
+│
+├── controllers/
+│   ├── playerController.js
+│   ├── ghostController.js
+│   ├── villainController.js
+│   ├── itemsController.js
+│
+├── rendering/
+│   └── renderLevel.js
+│
+├── levels/
+│   ├── classicMap.js
+│   ├── spaceMap.js
+│   ├── spaceLevel.js
+│
+├── entities/
+│   ├── player.js
+│   ├── ghost.js
+│   ├── villain.js
+│   ├── boundary.js
+│   ├── items.js
+│
+├── systems/
+│   ├── collision.js
+│   ├── portalManager.js
+│   ├── inputHandler.js
+│   ├── uiManager.js

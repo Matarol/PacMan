@@ -2,7 +2,6 @@
     constructor({position, velocity, context}) {
         this.position = position
         this.velocity = velocity
-        this.c = context
         this.radius = 15
         this.radians = 0.75
         this.openRate = 0.12
@@ -11,24 +10,24 @@
         this.eyesOffsetY = -6
     }
 
-    draw() {
-        this.c.save()
-        this.c.translate(this.position.x, this.position.y)
-        this.c.rotate(this.rotation)
-        this.c.translate(-this.position.x, -this.position.y)
-        this.c.beginPath()
-        this.c.arc(this.position.x, this.position.y, this.radius, this.radians, Math.PI * 2 - this.radians)
-        this.c.lineTo(this.position.x, this.position.y)
-        this.c.fillStyle = 'yellow'
-        this.c.fill()
-        this.c.closePath()        
-        this.c.restore()
+    draw(c) {
+        c.save()
+        c.translate(this.position.x, this.position.y)
+        c.rotate(this.rotation)
+        c.translate(-this.position.x, -this.position.y)
+        c.beginPath()
+        c.arc(this.position.x, this.position.y, this.radius, this.radians, Math.PI * 2 - this.radians)
+        c.lineTo(this.position.x, this.position.y)
+        c.fillStyle = 'yellow'
+        c.fill()
+        c.closePath()        
+        c.restore()
 
-        this.c.beginPath()
-        this.c.arc(this.position.x + this.eyesOffsetX, this.position.y + this.eyesOffsetY, 3, 0, Math.PI * 2)
-        this.c.closePath()
-        this.c.fillStyle = 'black'
-        this.c.fill()
+        c.beginPath()
+        c.arc(this.position.x + this.eyesOffsetX, this.position.y + this.eyesOffsetY, 3, 0, Math.PI * 2)
+        c.closePath()
+        c.fillStyle = 'black'
+        c.fill()
     }
 
     update() {        
@@ -54,7 +53,5 @@
             this.eyesOffsetX = -6
             this.eyesOffsetY = -3
         }
-
-        this.draw()
     }
 }

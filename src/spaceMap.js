@@ -1,10 +1,10 @@
 import { Boundary } from "./boundary.js";
 import { Pellet, PowerUp } from "./items.js";
-import { createImage } from "./map.js";
+import { createImage } from "./classicMap.js";
 
 const asteroidSpriteSheet = createImage('../assets/img/asteroids_spritesheet1.png')
 
-export const mapExtra1 = [
+export const spaceLayout = [
     ['1', '-', '-', '-', '-', '-', '-', '-', '-', '-', '2'],
     ['|', 'p', '.', '.', '.', '.', '.', '.', 'a', '.', '|'],
     ['|', '.', '.', 'a', '.', '.', '.', '.', '.', '.', '|'],
@@ -20,8 +20,8 @@ export const mapExtra1 = [
     ['4', '-', '-', '-', '-', '-', '-', '-', '-', '-', '3']
 ]
 
-export function renderSpaceMap({c, pellets, powerUps, boundaries}) {
-    mapExtra1.forEach((row, i) => {
+export function buildSpaceMap({c, pellets, powerUps, boundaries}) {
+    spaceLayout.forEach((row, i) => {
         row.forEach((symbol, j) => {
             const position = {
                 x: Boundary.width * j,

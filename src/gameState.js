@@ -4,6 +4,11 @@ export const gameState = {
     hasVisitedExtraLevel: false,
     health: 100,
     maxHealth: 100,
+    gameRunning: false,
+    animationId: null,
+    score: 0,
+    streakScore: 0,
+    highScore: localStorage.getItem('pacman-highscore') || 0,
     lastDamageTime: 0
 }
 

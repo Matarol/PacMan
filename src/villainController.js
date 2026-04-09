@@ -1,5 +1,7 @@
 import { Villain } from "./villain.js";
 import { circleCollidesWithRectangle } from "./collision.js";
+import { gameState } from "./gameState.js";
+import { FloatingText } from "./floatingText.js";
 
 export function updateVillain(villain, player, boundaries) {
     if (!villain || !player) return
@@ -86,4 +88,54 @@ export function shrunkenVillain(villain) {
             villain.miniature = false
         },
     4000)
+}
+
+export function handleVillainEaten({eatenVillain, pellets, score, scoreEl, activeEffects, gameController, showMenu, gameState, returnToMainMap}) {
+    // 1. Stoppa spelet
+    gameState.gameRunning = false;
+
+    // 2. Skapa effekten för skurken
+    activeEffects.push(new FloatingText({
+        x: eatenVillain.position.x,
+        y: eatenVillain.position.y,
+        text: '+500',
+        color: '#f863d5'
+    }));
+
+    // 3. Beräkna bonus och uppdatera poäng
+    const pelletBonus = pellets.length * 10;
+    const totalBonus = 500 + pelletBonus;
+    gameState.score += totalBonus;
+    scoreEl.innerText = gameState.score;
+
+    // 4. "Sug in" pellets visuellt
+    const drainInterval = setInterval(() => {
+        if (pellets.length > 0) {
+            const p = pellets.pop();
+            activeEffects.push(new FloatingText({
+                x: p.position.x,
+                y: p.position.y,
+                text: '+10',
+                color: 'white'
+            }));
+        } else {
+            clearInterval(drainInterval);
+            
+            // 5. NÄR ALLA PELLETS ÄR KLARA: Visa menyn!
+            // Vi lägger en liten delay så man hinner se sista effekten
+            setTimeout(() => {
+                cancelAnimationFrame(gameState.animationId); // Stoppa loopen helt
+                
+                showMenu('BONUSLVLCOMPLETE', {
+                    resumeGame: () => {
+                        gameState.hasVisitedExtraLevel = true;
+                        returnToMainMap();
+                    },
+                    resetToMain: () => location.reload()
+                }, {
+                    score: totalBonus // Skickar med bonusen till menyn
+                });
+            }, 1800);
+        }
+    }, 50);
 }

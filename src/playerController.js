@@ -60,6 +60,12 @@ export function handlePlayerMovement(player, currentDirection, nextDirection, bo
     }
   }
 
+  // 🔄 Rotation för klassisk labyrint (snappa till riktning)
+  if (player.velocity.x > 0) player.rotation = 0              // Höger (0°)
+  else if (player.velocity.x < 0) player.rotation = Math.PI   // Vänster (180°)
+  else if (player.velocity.y > 0) player.rotation = Math.PI / 2 // Ner (90°)
+  else if (player.velocity.y < 0) player.rotation = -Math.PI / 2 // Upp (270°)
+
   return { currentDirection, nextDirection }
 }
 
