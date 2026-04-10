@@ -31,11 +31,11 @@
     }
 
     update(deltaTime) {        
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
+        this.position.x += this.velocity.x * deltaTime
+        this.position.y += this.velocity.y * deltaTime
 
         if (this.radians < 0 || this.radians > 0.75) this.openRate = -this.openRate
-        this.radians += this.openRate * (deltaTime * 60) // Justera för frame rate
+        this.radians += this.openRate
 
         if (this.velocity.x > 0) {
             this.eyesOffsetX = 3

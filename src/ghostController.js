@@ -1,17 +1,20 @@
 import { Ghost } from "./ghost.js"
 import { circleCollidesWithRectangle } from "./collision.js"
 
-export function updateGhosts(ghosts, boundaries, player) { ghosts.forEach(ghost => {
-        ghost.update()        
+export function updateGhosts(ghosts, boundaries, player, deltaTime) { ghosts.forEach(ghost => {        
 
         const collisions = []
+
+        const steps = 4
+
+        for (let i = 0; i < steps; i++) {
 
         boundaries.forEach(boundary => {
             if (
                 !collisions.includes('right') &&
                 circleCollidesWithRectangle({
                     circle: {...ghost, velocity: {
-                        x: Ghost.speed,
+                        x: Ghost.speed * deltaTime,
                         y: 0
                     }
                 },
@@ -25,7 +28,7 @@ export function updateGhosts(ghosts, boundaries, player) { ghosts.forEach(ghost 
             !collisions.includes('left') &&
                 circleCollidesWithRectangle({
                     circle: {...ghost, velocity: {
-                        x: -Ghost.speed,
+                        x: -Ghost.speed * deltaTime,
                         y: 0
                     }
                 },
@@ -40,7 +43,7 @@ export function updateGhosts(ghosts, boundaries, player) { ghosts.forEach(ghost 
                 circleCollidesWithRectangle({
                     circle: {...ghost, velocity: {
                         x: 0,
-                        y: Ghost.speed
+                        y: Ghost.speed * deltaTime
                     }
                 },
                 rectangle: boundary
@@ -54,7 +57,7 @@ export function updateGhosts(ghosts, boundaries, player) { ghosts.forEach(ghost 
                 circleCollidesWithRectangle({
                     circle: {...ghost, velocity: {
                         x: 0,
-                        y: -Ghost.speed
+                        y: -Ghost.speed * deltaTime
                     }
                 },
                 rectangle: boundary
@@ -106,7 +109,11 @@ export function updateGhosts(ghosts, boundaries, player) { ghosts.forEach(ghost 
             }
             ghost.prevCollisions = []
         }
-    })
+        
+            ghost.update(deltaTime / steps)
+            }
+
+    })   
 
 }
 

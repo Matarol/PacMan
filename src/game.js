@@ -257,11 +257,9 @@ function animate(timestamp = performance.now()) {
     let deltaTime = (timestamp - lastTime) / 1000; // Tid i sekunder sedan senaste frame
     lastTime = timestamp;
 
-    if (isNaN(deltaTime) || deltaTime <= 0 || deltaTime > 0.1) {
+    if (isNaN(deltaTime) || deltaTime <= 0 || deltaTime > 0.033) {
         deltaTime = 1 / 60; 
     }
-
-    console.log("Pacman Pos:", player.position.x, player.position.y, "Delta:", deltaTime);
 
     // 1. Rendera effekter (poängtexter etc)
     activeEffects.forEach((effect, index) => {

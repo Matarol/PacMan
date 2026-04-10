@@ -58,11 +58,11 @@ export function updateSpaceMode({ player, villains, boundaries, keys, gameState,
 
 }
 
-export function updateClassicMode({ player, ghosts, currentDirection, nextDirection, boundaries }) {
+export function updateClassicMode({ player, ghosts, currentDirection, nextDirection, boundaries, deltaTime }) {
 
-    const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries);
+    const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries, deltaTime);
 
-    updateGhosts(ghosts, boundaries, player);
+    updateGhosts(ghosts, boundaries, player, deltaTime);
 
     return result;
 }
