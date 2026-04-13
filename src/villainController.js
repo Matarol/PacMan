@@ -82,6 +82,7 @@ export function updateVillain(villain, player, boundaries) {
 
 //Funktion för att krympa skurken ifall en powerUp äts i extrabanan
 export function shrunkenVillain(villain) {
+    if (!villain || !villain.velocity) return
     villain.miniature = true
 
     setTimeout(() => {

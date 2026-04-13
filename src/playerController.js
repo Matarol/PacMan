@@ -76,21 +76,21 @@ export function handlePlayerMovement(player, currentDirection, nextDirection, bo
 }
 
 export function handleSpaceMovement(player, keys, boundaries, deltaTime) {
-  const acceleration = 15 * deltaTime
+  const acceleration = 15
   const friction = 0.98
   const maxSpeed = 6
 
   const asteroidRadius = 10
 
   // 🚀 Acceleration (thrusters)
-  if (keys.w.pressed) player.velocity.y -= acceleration
-  if (keys.s.pressed) player.velocity.y += acceleration
-  if (keys.a.pressed) player.velocity.x -= acceleration
-  if (keys.d.pressed) player.velocity.x += acceleration
+  if (keys.w.pressed) player.velocity.y -= acceleration * deltaTime
+  if (keys.s.pressed) player.velocity.y += acceleration * deltaTime
+  if (keys.a.pressed) player.velocity.x -= acceleration * deltaTime
+  if (keys.d.pressed) player.velocity.x += acceleration * deltaTime
 
   // 🧱 Kollision (separera X/Y som du redan gör)
-  let nextX = player.position.x + player.velocity.x
-  let nextY = player.position.y + player.velocity.y
+  let nextX = player.position.x + player.velocity.x * deltaTime
+  let nextY = player.position.y + player.velocity.y * deltaTime
 
   let blockedX = false
   let blockedY = false
@@ -136,8 +136,13 @@ export function handleSpaceMovement(player, keys, boundaries, deltaTime) {
     if (boundary.type === 'asteroid') {
       const push = getRepulsionVelocity(player, boundary)
 
-      player.position.x += push.x * deltaTime * 60
-      player.position.y += push.y * deltaTime * 60
+      if (!isNaN(push.x) && !isNaN(push.y)) {
+        player.position.x += push.x
+        player.position.y += push.y
+      }
+
+      // player.position.x += push.x * deltaTime * 60
+      // player.position.y += push.y * deltaTime * 60
     }
   }
 }
