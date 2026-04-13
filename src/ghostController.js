@@ -7,133 +7,86 @@ export function updateGhosts(ghosts, boundaries, player, deltaTime) {
         const stepDelta = deltaTime / steps
 
         for (let i = 0; i < steps; i++) {
-
-            // ===============================
-            // 1. Kolla blockerade riktningar
-            // ===============================
             let collisions = []
 
-            const directions = {
-                right: { x: Ghost.speed * stepDelta, y: 0 },
-                left: { x: -Ghost.speed * stepDelta, y: 0 },
-                down: { x: 0, y: Ghost.speed * stepDelta },
-                up: { x: 0, y: -Ghost.speed * stepDelta }
-            }
+            // 1. Registrera ALLA nuvarande kollisioner
+            boundaries.forEach(boundary => {
+                if (!collisions.includes('right') && circleCollidesWithRectangle({
+                    circle: { ...ghost, velocity: { x: Ghost.speed * stepDelta, y: 0 } },
+                    rectangle: boundary
+                })) { collisions.push('right') }
 
-            for (const direction in directions) {
-                for (const boundary of boundaries) {
-                    if (
-                        circleCollidesWithRectangle({
-                            circle: {
-                                ...ghost,
-                                velocity: directions[direction]
-                            },
-                            rectangle: boundary
-                        })
-                    ) {
-                        collisions.push(direction)
-                        break
-                    }
-                }
-            }
+                if (!collisions.includes('left') && circleCollidesWithRectangle({
+                    circle: { ...ghost, velocity: { x: -Ghost.speed * stepDelta, y: 0 } },
+                    rectangle: boundary
+                })) { collisions.push('left') }
 
-            // ===============================
-            // 2. Nuvarande riktning
-            // ===============================
-            let currentDirection = null
+                if (!collisions.includes('down') && circleCollidesWithRectangle({
+                    circle: { ...ghost, velocity: { x: 0, y: Ghost.speed * stepDelta } },
+                    rectangle: boundary
+                })) { collisions.push('down') }
 
-            if (ghost.velocity.x > 0) currentDirection = "right"
-            else if (ghost.velocity.x < 0) currentDirection = "left"
-            else if (ghost.velocity.y > 0) currentDirection = "down"
-            else if (ghost.velocity.y < 0) currentDirection = "up"
+                if (!collisions.includes('up') && circleCollidesWithRectangle({
+                    circle: { ...ghost, velocity: { x: 0, y: -Ghost.speed * stepDelta } },
+                    rectangle: boundary
+                })) { collisions.push('up') }
+            })
 
-            const opposite = {
-                up: "down",
-                down: "up",
-                left: "right",
-                right: "left"
-            }
+            // 2. Kolla om vi är blockerade i nuvarande riktning
+            let isBlocked = false
+            if (ghost.velocity.x > 0 && collisions.includes('right')) isBlocked = true
+            else if (ghost.velocity.x < 0 && collisions.includes('left')) isBlocked = true
+            else if (ghost.velocity.y > 0 && collisions.includes('down')) isBlocked = true
+            else if (ghost.velocity.y < 0 && collisions.includes('up')) isBlocked = true
 
-            // ======================================
-            // 3. Byt riktning endast vid korsning
-            // ======================================
+            // 3. Om vi når en korsning (ändrade kollisioner) ELLER är blockerade
             if (isCenteredInTile(ghost)) {
+                const directions = ['up', 'down', 'left', 'right']
+                const pathways = directions.filter(dir => !collisions.includes(dir))
 
-                const availableDirections =
-                    ["up", "down", "left", "right"]
-                        .filter(dir => !collisions.includes(dir))
+                // 1. Ta reda på vad som är "bakåt" (för att undvika att de darrar fram och tillbaka)
+                let opposite = ''
+                if (ghost.velocity.x > 0) opposite = 'left'
+                else if (ghost.velocity.x < 0) opposite = 'right'
+                else if (ghost.velocity.y > 0) opposite = 'up'
+                else if (ghost.velocity.y < 0) opposite = 'down'
 
-                const forwardBlocked =
-                    collisions.includes(currentDirection)
+                // 2. Filtrera bort "bakåt" om det finns andra val (annars fastnar de i återvändsgränder)
+                let validOptions = pathways.filter(p => p !== opposite)
+                if (validOptions.length === 0) validOptions = pathways 
 
-                const perpendicularChoices =
-                    availableDirections.filter(
-                        dir =>
-                            dir !== currentDirection &&
-                            dir !== opposite[currentDirection]
-                    )
+                // 3. LOGIK-FIX: Om vi har en korsning (fler än 1 väg framåt + nuvarande), 
+                // tvinga spöket att ibland byta riktning även om vägen framåt är fri.
+                if (validOptions.length > 0) {
+                    const direction = validOptions[Math.floor(Math.random() * validOptions.length)]
 
-                // Byt bara om:
-                // - framåt blockerat
-                // - eller korsning finns
-                if (forwardBlocked || perpendicularChoices.length > 0) {
-
-                    let choices = []
-
-                    if (forwardBlocked) {
-                        choices = availableDirections.filter(
-                            dir => dir !== opposite[currentDirection]
-                        )
-                    } else {
-                        choices = perpendicularChoices
-                    }
-
-                    if (choices.length > 0) {
-                        const direction =
-                            choices[Math.floor(Math.random() * choices.length)]
-
-                        switch (direction) {
-                            case "up":
-                                ghost.velocity.x = 0
-                                ghost.velocity.y = -Ghost.speed
-                                break
-
-                            case "down":
-                                ghost.velocity.x = 0
-                                ghost.velocity.y = Ghost.speed
-                                break
-
-                            case "left":
-                                ghost.velocity.x = -Ghost.speed
-                                ghost.velocity.y = 0
-                                break
-
-                            case "right":
-                                ghost.velocity.x = Ghost.speed
-                                ghost.velocity.y = 0
-                                break
-                        }
+                    // Uppdatera velocity endast om vi valt en ny riktning
+                    switch (direction) {
+                        case 'down':  ghost.velocity.y = Ghost.speed;  ghost.velocity.x = 0; break
+                        case 'up':    ghost.velocity.y = -Ghost.speed; ghost.velocity.x = 0; break
+                        case 'left':  ghost.velocity.x = -Ghost.speed; ghost.velocity.y = 0; break
+                        case 'right': ghost.velocity.x = Ghost.speed;  ghost.velocity.y = 0; break
                     }
                 }
             }
 
-            // ===============================
-            // 4. Flytta om ej blockerad
-            // ===============================
-            if (!collisions.includes(currentDirection)) {
+            // Spara nuvarande kollisioner till nästa loop
+            ghost.prevCollisions = [...collisions]
+
+            // 4. Flytta spöket (nu uppdateras isBlocked efter eventuellt riktningsbyte)
+            // Vi kollar blockering igen för att undvika att de darrar mot väggar
+            let finalBlocked = false
+            boundaries.forEach(boundary => {
+                if (circleCollidesWithRectangle({
+                    circle: { ...ghost, velocity: { x: ghost.velocity.x * stepDelta, y: ghost.velocity.y * stepDelta } },
+                    rectangle: boundary
+                })) { finalBlocked = true }
+            })
+
+            if (!finalBlocked) {
                 ghost.update(stepDelta)
             }
         }
-    })
-}
-
-export function scareGhosts(ghosts) {
-    ghosts.forEach(ghost => {
-        ghost.scared = true
-
-        setTimeout(() => {
-            ghost.scared = false
-        }, 4000)
     })
 }
 
@@ -211,8 +164,6 @@ export function scareGhosts(ghosts) {
 //                     collisions.push('up')
 //                 }
 //             })
-
-//             // console.log("Collisions:", collisions, "Previous:", ghost.prevCollisions)
             
 //             if (collisions.length > ghost.prevCollisions.length)
 //                 ghost.prevCollisions = [...collisions]            
@@ -299,13 +250,13 @@ export function scareGhosts(ghosts) {
 
 // }
 
-// export function scareGhosts(ghosts) {
-//     ghosts.forEach(ghost => {
-//         ghost.scared = true
+export function scareGhosts(ghosts) {
+    ghosts.forEach(ghost => {
+        ghost.scared = true
 
-//         setTimeout(() => {
-//             ghost.scared = false
-//         },
-//             4000)
-//     })
-// }
+        setTimeout(() => {
+            ghost.scared = false
+        },
+            4000)
+    })
+}
