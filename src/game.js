@@ -331,7 +331,24 @@ function animate(timestamp = performance.now()) {
     }
 
     // 🔥 NYTT: UPDATE ENTITIES
+    // player.update(deltaTime)
     player.update(deltaTime)
+
+    console.log("player:", player);
+    console.log("ghosts:", ghosts);
+    console.log("villains:", villains);
+
+    if (!player || !player.velocity) {
+        console.error("PLAYER BROKEN", player)
+    }
+
+    if (villains) {
+        villains.forEach((v, i) => {
+            if (!v || !v.velocity) {
+                console.error("BAD VILLAIN", i, v)
+            }
+        })
+    }
 
     // villains.forEach(villain => villain.update())
 

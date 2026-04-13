@@ -10,9 +10,12 @@ export function updateItems({player, pellets, powerUps, ghosts, villains, scoreE
         // powerUp.draw()
 
         if (circleCollidesWithCircle(powerUp, player)) {
-            if (player.physicsMode === 'SPACE') {
+            if (player.physicsMode === 'SPACE' && villains && villains.length > 0) {
                 powerUps.splice(i, 1)
-                villains.forEach(v =>  shrunkenVillain(v))
+                villains.forEach(v => {
+                    if (!v) return
+                    shrunkenVillain(v)
+                })
             } else {
             powerUps.splice(i, 1)
 

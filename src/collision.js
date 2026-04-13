@@ -86,7 +86,7 @@ export function isCenteredInTile(entity) {
         Boundary.height +
         halfH
 
-    const tolerance = 3
+    const tolerance = 10
 
     return (
         Math.abs(entity.position.x - centerX) <= tolerance &&
