@@ -1,5 +1,5 @@
 ﻿import { Player } from "./player.js"
-import { circleCollidesWithRectangle, circlesCollide, getRepulsionVelocity } from "./collision.js"
+import { circleCollidesWithRectangle, circlesCollide, getRepulsionVelocity, isCenteredInTile } from "./collision.js"
 
 export function handlePlayerMovement(player, currentDirection, nextDirection, boundaries, deltaTime) {
   const speed = 200
@@ -12,7 +12,7 @@ export function handlePlayerMovement(player, currentDirection, nextDirection, bo
   }
 
   // 🔥 Try to switch direction FIRST
-  if (nextDirection) {
+  if (nextDirection && isCenteredInTile(player)) {
     const velocity = directions[nextDirection]
 
     let canTurn = true
