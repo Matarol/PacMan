@@ -75,37 +75,122 @@ export function handlePlayerMovement(player, currentDirection, nextDirection, bo
   return { currentDirection, nextDirection }
 }
 
+// export function handleSpaceMovement(player, keys, boundaries, deltaTime) {
+//   const acceleration = 15
+//   const friction = 0.98
+//   const maxSpeed = 6
+
+//   const asteroidRadius = 10
+
+//   // 🚀 Acceleration (thrusters)
+//   if (keys.w.pressed) player.velocity.y -= acceleration * deltaTime
+//   if (keys.s.pressed) player.velocity.y += acceleration * deltaTime
+//   if (keys.a.pressed) player.velocity.x -= acceleration * deltaTime
+//   if (keys.d.pressed) player.velocity.x += acceleration * deltaTime
+
+//   // 🧱 Kollision (separera X/Y som du redan gör)
+//   let nextX = player.position.x + player.velocity.x * deltaTime
+//   let nextY = player.position.y + player.velocity.y * deltaTime
+
+//   let blockedX = false
+//   let blockedY = false
+
+//   for (let boundary of boundaries) {
+//     if (boundary.isPortal) continue
+
+//     const testCircleX = { ...player, position: { x: nextX, y: player.position.y } }
+//     const testCircleY = { ...player, position: { x: player.position.x, y: nextY } }
+
+//     if (boundary.type === 'asteroid') {
+//       continue
+      
+//     } else {
+//       //REKTANGEL-KOLLISION (för vanliga väggar)
+//       if (circleCollidesWithRectangle({ circle: testCircleX, rectangle: boundary})) blockedX = true
+//       if (circleCollidesWithRectangle({ circle: testCircleY, rectangle: boundary })) blockedY = true
+//     }    
+//   }
+
+//   if (blockedX) player.velocity.x = 0
+//   if (blockedY) player.velocity.y = 0
+
+//   // 🧊 Friction (glidkänsla)
+//   player.velocity.x *= friction
+//   player.velocity.y *= friction
+
+//   // 🚫 Clamp max speed
+//   const speed = Math.hypot(player.velocity.x, player.velocity.y)
+//   if (speed > maxSpeed) {
+//     player.velocity.x = (player.velocity.x / speed) * maxSpeed
+//     player.velocity.y = (player.velocity.y / speed) * maxSpeed
+//   }
+
+//   // 🔄 Rotation (peka dit du rör dig)
+//   if (speed > 0.1) {
+//     player.rotation = Math.atan2(player.velocity.y, player.velocity.x)
+//   }
+
+//   for (let boundary of boundaries) {
+//     if (boundary.isPortal) continue
+
+//     if (boundary.type === 'asteroid') {
+//       const push = getRepulsionVelocity(player, boundary)
+
+//       if (!isNaN(push.x) && !isNaN(push.y)) {
+//         player.position.x += push.x
+//         player.position.y += push.y
+//       }
+
+//       // player.position.x += push.x * deltaTime * 60
+//       // player.position.y += push.y * deltaTime * 60
+//     }
+//   }
+// }
+
 export function handleSpaceMovement(player, keys, boundaries, deltaTime) {
-  const acceleration = 15
-  const friction = 0.98
-  const maxSpeed = 6
+  // Drastiskt högre värden behövs när de multipliceras med deltaTime
+  const acceleration = 500
+  const friction = 0.99 // Lite lägre friktion ger mer "rymdkänsla"
+  const maxSpeed = 100   // En rimlig maxfart för Pacman
 
-  const asteroidRadius = 10
-
-  // 🚀 Acceleration (thrusters)
+  // 🚀 Acceleration
+  // Vi använder en multiplier för att göra accelerationen mer kännbar
   if (keys.w.pressed) player.velocity.y -= acceleration * deltaTime
   if (keys.s.pressed) player.velocity.y += acceleration * deltaTime
   if (keys.a.pressed) player.velocity.x -= acceleration * deltaTime
   if (keys.d.pressed) player.velocity.x += acceleration * deltaTime
 
-  // 🧱 Kollision (separera X/Y som du redan gör)
+  // 🧊 Friktion (Appliceras på den nuvarande hastigheten)
+  // Genom att använda Math.pow ser vi till att friktionen känns likadan oavsett FPS
+  const frictionAdjustment = Math.pow(friction, deltaTime * 60)
+  player.velocity.x *= frictionAdjustment
+  player.velocity.y *= frictionAdjustment
+
+  // 🚫 Clamp max speed (Gör detta INNAN du kollar kollisioner)
+  const speed = Math.hypot(player.velocity.x, player.velocity.y)
+  if (speed > maxSpeed) {
+    player.velocity.x = (player.velocity.x / speed) * maxSpeed
+    player.velocity.y = (player.velocity.y / speed) * maxSpeed
+  }
+
+  // 🧱 Kollision
   let nextX = player.position.x + player.velocity.x * deltaTime
   let nextY = player.position.y + player.velocity.y * deltaTime
 
   let blockedX = false
   let blockedY = false
 
+  // 🔄 Rotation (peka dit du rör dig)
+  // if (speed > 0.1) {
+  // player.rotation = Math.atan2(player.velocity.y, player.velocity.x)
+
   for (let boundary of boundaries) {
     if (boundary.isPortal) continue
-
+    
     const testCircleX = { ...player, position: { x: nextX, y: player.position.y } }
     const testCircleY = { ...player, position: { x: player.position.x, y: nextY } }
 
-    if (boundary.type === 'asteroid') {
-      continue
-      
-    } else {
-      //REKTANGEL-KOLLISION (för vanliga väggar)
+    if (boundary.type !== 'asteroid') {
       if (circleCollidesWithRectangle({ circle: testCircleX, rectangle: boundary})) blockedX = true
       if (circleCollidesWithRectangle({ circle: testCircleY, rectangle: boundary })) blockedY = true
     }    
@@ -113,36 +198,15 @@ export function handleSpaceMovement(player, keys, boundaries, deltaTime) {
 
   if (blockedX) player.velocity.x = 0
   if (blockedY) player.velocity.y = 0
+  
+  // Uppdatera positionen faktiskt (viktigt om detta inte görs i en ghost-liknande update)
+  player.position.x += player.velocity.x * deltaTime
+  player.position.y += player.velocity.y * deltaTime
 
-  // 🧊 Friction (glidkänsla)
-  player.velocity.x *= friction
-  player.velocity.y *= friction
-
-  // 🚫 Clamp max speed
-  const speed = Math.hypot(player.velocity.x, player.velocity.y)
-  if (speed > maxSpeed) {
-    player.velocity.x = (player.velocity.x / speed) * maxSpeed
-    player.velocity.y = (player.velocity.y / speed) * maxSpeed
-  }
-
-  // 🔄 Rotation (peka dit du rör dig)
-  if (speed > 0.1) {
+  // Uppdatera rotationen baserat på hastigheten (endast om han faktiskt rör sig)
+  const movingThreshold = 0.1; // Rotera inte om han nästan står stilla
+  if (Math.abs(player.velocity.x) > movingThreshold || Math.abs(player.velocity.y) > movingThreshold) {
+    // Math.atan2 ger vinkeln i radianer mellan X-axeln och vektorn (x, y)
     player.rotation = Math.atan2(player.velocity.y, player.velocity.x)
-  }
-
-  for (let boundary of boundaries) {
-    if (boundary.isPortal) continue
-
-    if (boundary.type === 'asteroid') {
-      const push = getRepulsionVelocity(player, boundary)
-
-      if (!isNaN(push.x) && !isNaN(push.y)) {
-        player.position.x += push.x
-        player.position.y += push.y
-      }
-
-      // player.position.x += push.x * deltaTime * 60
-      // player.position.y += push.y * deltaTime * 60
-    }
   }
 }
