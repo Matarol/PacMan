@@ -10,6 +10,7 @@
         this.scared = false
         this.eyesOffsetX = 0
         this.eyesOffsetY = 0
+        this.lastDirection = ''
     }
 
     draw(c) {
