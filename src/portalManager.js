@@ -63,7 +63,11 @@ export function checkPortalCollision(player, boundaries) {
     if (player.physicsMode === 'SPACE' || gameState.hasVisitedExtraLevel) return null;
     
     const activePortal = boundaries.find(b => b.isPortal);
-    if (activePortal && circleCollidesWithRectangle({ circle: player, rectangle: activePortal})) {
+    if (activePortal && circleCollidesWithRectangle({ circle: {
+        ...player,
+        velocity: { x: 0, y: 0}
+     },
+     rectangle: activePortal})) {
         return activePortal;
     }
     return null;
@@ -135,8 +139,4 @@ export function startExitPortalLoop(player, pellets) {
         }
     }, Math.random() * 7000 + 8000);
 
-    // setTimeout(() => {
-    //     gameState.gameRunning = true;
-    //     animate();
-    // }, 1000);
 }

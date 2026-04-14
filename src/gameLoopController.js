@@ -6,8 +6,13 @@ import { damagePlayer } from "./gameState.js";
 import { updateUI } from "./uiManager.js";
 import { handleVillainEaten } from "./villainController.js";
 
-export function updateSpaceMode({ player, villains, boundaries, keys, gameState, pellets, scoreEl, activeEffects, showMenu, returnToMainMap, handleGameOver }) {
-    handleSpaceMovement(player, keys, boundaries);
+export function updateSpaceMode({ player, villains, boundaries, keys, gameState, pellets, scoreEl, activeEffects, showMenu, returnToMainMap, handleGameOver, deltaTime }) {
+
+    if (!player || !player.velocity) return
+
+    villains = villains || []
+
+    handleSpaceMovement(player, keys, boundaries, deltaTime);
 
     boundaries.forEach(boundary => {
         if (boundary.type === 'asteroid') {
@@ -37,7 +42,7 @@ export function updateSpaceMode({ player, villains, boundaries, keys, gameState,
 
     for (let i = villains.length - 1; i >= 0; i--) {
         const v = villains[i];
-        updateVillain(v, player, boundaries);
+        updateVillain(v, player, boundaries, deltaTime);
 
         if (circleCollidesWithCircle(player, v)) {
             if (v.miniature) {
@@ -58,11 +63,11 @@ export function updateSpaceMode({ player, villains, boundaries, keys, gameState,
 
 }
 
-export function updateClassicMode({ player, ghosts, currentDirection, nextDirection, boundaries }) {
+export function updateClassicMode({ player, ghosts, currentDirection, nextDirection, boundaries, deltaTime }) {
 
-    const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries);
+    const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries, deltaTime);
 
-    updateGhosts(ghosts, boundaries, player);
+    updateGhosts(ghosts, boundaries, player, deltaTime);
 
     return result;
 }

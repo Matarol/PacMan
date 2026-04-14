@@ -71,3 +71,25 @@ export function getCircleRepulsion(c1, c2) {
     }
     return { x: 0, y: 0 }
 }
+
+export function isCenteredInTile(entity) {
+    const halfW = Boundary.width / 2
+    const halfH = Boundary.height / 2
+
+    const centerX =
+        Math.round((entity.position.x - halfW) / Boundary.width) *
+        Boundary.width +
+        halfW
+
+    const centerY =
+        Math.round((entity.position.y - halfH) / Boundary.height) *
+        Boundary.height +
+        halfH
+
+    const tolerance = 10
+
+    return (
+        Math.abs(entity.position.x - centerX) <= tolerance &&
+        Math.abs(entity.position.y - centerY) <= tolerance
+    )
+}

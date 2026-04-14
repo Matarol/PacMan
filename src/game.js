@@ -28,6 +28,7 @@ let lastMainPosition = null
 let lastGhostPositions = []
 let lastPelletState = []
 let activeEffects = [] // Array för att hålla reda på texterna
+let lastTime = performance.now()
 
 const keys = {
     w: { pressed: false },
@@ -244,12 +245,21 @@ async function init() {
             y: 0
         }
     })
-    animate()
+    animate(performance.now())
 }
 
-function animate() {
+function animate(timestamp = performance.now()) {
     gameState.animationId = requestAnimationFrame(animate)
     // c.clearRect(0, 0, canvas.width, canvas.height)
+
+    
+
+    let deltaTime = (timestamp - lastTime) / 1000; // Tid i sekunder sedan senaste frame
+    lastTime = timestamp;
+
+    if (isNaN(deltaTime) || deltaTime <= 0 || deltaTime > 0.033) {
+        deltaTime = 1 / 60; 
+    }
 
     // 1. Rendera effekter (poängtexter etc)
     activeEffects.forEach((effect, index) => {
@@ -262,10 +272,10 @@ function animate() {
 
     // 2. KÖR LOGIK BEROENDE AV FYSIKMODE
     if (player.physicsMode === 'SPACE' && villains) {
-        updateSpaceMode({ player, villains, boundaries, keys, gameState, pellets, scoreEl: document.getElementById('scoreEl'), activeEffects, showMenu, returnToMainMap, handleGameOver })
+        updateSpaceMode({ player, villains, boundaries, keys, gameState, pellets, scoreEl: document.getElementById('scoreEl'), activeEffects, showMenu, returnToMainMap, handleGameOver, deltaTime })
 
     } else {
-        const result = updateClassicMode({ player, ghosts, currentDirection, nextDirection, boundaries })
+        const result = updateClassicMode({ player, ghosts, currentDirection, nextDirection, boundaries, deltaTime })
         currentDirection = result.currentDirection
         nextDirection = result.nextDirection
 
@@ -321,7 +331,24 @@ function animate() {
     }
 
     // 🔥 NYTT: UPDATE ENTITIES
-    player.update()
+    // player.update(deltaTime)
+    player.update(deltaTime)
+
+    console.log("player:", player);
+    console.log("ghosts:", ghosts);
+    console.log("villains:", villains);
+
+    if (!player || !player.velocity) {
+        console.error("PLAYER BROKEN", player)
+    }
+
+    if (villains) {
+        villains.forEach((v, i) => {
+            if (!v || !v.velocity) {
+                console.error("BAD VILLAIN", i, v)
+            }
+        })
+    }
 
     // villains.forEach(villain => villain.update())
 

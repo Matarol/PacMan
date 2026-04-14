@@ -1,5 +1,5 @@
 ﻿export class Ghost {
-    static speed = 2
+    static speed = 120
     constructor({position, velocity, color = 'green'}) {
         this.position = position
         this.velocity = velocity
@@ -59,9 +59,9 @@
         c.fill()
     }
 
-    update() {        
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
+    update(deltaTime) {        
+        this.position.x += this.velocity.x * deltaTime
+        this.position.y += this.velocity.y * deltaTime
 
         this.eyesOffsetX = 0
         this.eyesOffsetY = 0
@@ -71,7 +71,5 @@
 
         if (this.velocity.y > 0) this.eyesOffsetY = 1.5
         else if (this.velocity.y < 0) this.eyesOffsetY = -1.5
-
-        // this.draw()
     }
 }
