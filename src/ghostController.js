@@ -37,7 +37,20 @@ export function updateGhosts(ghosts, boundaries, player, deltaTime) {
             if ((isCenteredInTile(ghost) && isAtNewTile) || isBlocked) {
                 ghost.lastTile = { x: currentTileX, y: currentTileY };
 
+                let currentMoveDir = '';
+
+                if (ghost.velocity.x > 0) currentMoveDir = 'right';
+                else if (ghost.velocity.x < 0) currentMoveDir = 'left';
+                else if (ghost.velocity.y > 0) currentMoveDir = 'down';
+                else if (ghost.velocity.y < 0) currentMoveDir = 'up';
+
+                //Om spöket står still pga kollision, sätts currentMoveDir utifrån lastDir
+                if (currentMoveDir === 0 && ghost.lastDirection) {
+                    currentMoveDir = ghost.lastDirection;
+                }
+
                 const directions = ['up', 'down', 'left', 'right'];
+                // Pathways innehåller endast directions som inte finns i collisions
                 const pathways = directions.filter(dir => !collisions.includes(dir));
 
                 // Hitta motsatt riktning (för att undvika 180-svängar)
@@ -54,6 +67,8 @@ export function updateGhosts(ghosts, boundaries, player, deltaTime) {
                 if (validOptions.length > 0 || pathways.length > 0) {
                     const finalChoices = validOptions.length > 0 ? validOptions : pathways;
                     const direction = finalChoices[Math.floor(Math.random() * finalChoices.length)];
+
+                    ghost.lastDirection = direction
 
                     // VIKTIGT: Sätt velocity till exakt hastighet
                     if (direction === 'right') { ghost.velocity.x = Ghost.speed; ghost.velocity.y = 0; }
