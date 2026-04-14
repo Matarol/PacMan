@@ -183,6 +183,7 @@ async function init() {
     clearPortalTimers()
 
     canvas.classList.remove('space-background')
+    villains = []
 
     gameState.hasVisitedExtraLevel = false
 
