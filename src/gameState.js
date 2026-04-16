@@ -31,6 +31,8 @@ export function resolvePlayerGhostCollision(player, ghosts) {
 }
 
 export function checkWin(pellets) {
+    pellets.filter(p => !p.isDangerous && p.constructor.name === 'Pellet');
+
     return !pellets.some(p => !p.isDangerous)
 }
 

@@ -22,13 +22,10 @@ export function openRandomPortal(boundaries) {
         selectedBoundary.isPortal = true;
         portalState.portalBoundary = selectedBoundary;
 
-        console.log('En portal har öppnats');
-
         portalState.portalClosingTimer = setTimeout(() => {
             if (selectedBoundary === portalState.portalBoundary) {
                 selectedBoundary.isPortal = false;
                 portalState.portalBoundary = null;
-                console.log('Portalen har stängts');
             }
         }, 5000);
     }
@@ -80,7 +77,6 @@ export function handlePortalEntry(config) {
         boundaries 
     } = config;
 
-    console.log("Portal aktiverad! Byter till rymdläge...");
     gameState.hasVisitedExtraLevel = true;
 
     const lastMainPosition = { x: player.position.x, y: player.position.y };

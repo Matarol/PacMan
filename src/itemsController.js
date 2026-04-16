@@ -26,7 +26,7 @@ export function updateItems({player, pellets, powerUps, ghosts, villains, scoreE
     }
 
     // Krockar med pellets
-    for (let i = pellets.length - 1; 0 <= i; i-- ) {
+    for (let i = pellets.length - 1; i >= 0; i-- ) {
         const pellet = pellets[i]
 
         if (circleCollidesWithCircle(pellet, player)) {

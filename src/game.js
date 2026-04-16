@@ -60,20 +60,25 @@ async function drawStaticMap() {
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.scale(dpr * scale, dpr * scale);
 
-    boundaries.length = 0;
-    pellets.length = 0;
-    powerUps.length = 0;
+    const tempBoundaries = [];
+    const tempPowerUps = [];
+    const tempPellets = [];
 
-    initClassicLevel({ pellets, powerUps, boundaries, ghosts, player })
 
-    const imagePromises = boundaries.map(b => b.image).filter(img => img instanceof HTMLImageElement).map(img => img.decode().catch(() => {}))
+    // boundaries.length = 0;
+    // pellets.length = 0;
+    // powerUps.length = 0;
+
+    initClassicLevel({ pellets: tempPellets, powerUps: tempPowerUps, boundaries: tempBoundaries, ghosts: [] , player: null })
+
+    const imagePromises = tempBoundaries.map(b => b.image).filter(img => img instanceof HTMLImageElement).map(img => img.decode().catch(() => {}))
 
     await Promise.all(imagePromises)
 
     c.clearRect(0, 0, canvas.width, canvas.height)
-    boundaries.forEach(boundary => boundary.draw(c))
-    pellets.forEach(pellet => pellet.draw(c))
-    powerUps.forEach(powerUp => powerUp.draw(c))
+    tempBoundaries.forEach(boundary => boundary.draw(c))
+    tempPellets.forEach(pellet => pellet.draw(c))
+    tempPowerUps.forEach(powerUp => powerUp.draw(c))
 }
 
 function returnToMainMap() {
@@ -87,6 +92,7 @@ function returnToMainMap() {
     initClassicLevel({ pellets, powerUps, boundaries, ghosts, player })
 
     player.physicsMode = 'NORMAL'
+    gameState.justResumed = true
 
     if (lastMainPosition) {
         player.position.x = lastMainPosition.x,
@@ -145,6 +151,7 @@ function togglePause() {
         })
     } else {
         gameState.gameRunning = true
+        gameState.justResumed = true
         hideUIOverlay()
         animate()
     }
@@ -152,6 +159,7 @@ function togglePause() {
 
 function handleGameOver(isWin) {
     cancelAnimationFrame(gameState.animationId)
+    cancelAnimationFrame(animationId)
     gameState.gameRunning = false
 
     const finalScore = gameState.streakScore + gameState.score
@@ -183,11 +191,17 @@ async function init() {
     clearPortalTimers()
 
     canvas.classList.remove('space-background')
-    villains = []
+
+    //Tömmer alla globala arrays
+    pellets.length = 0;
+    powerUps.length = 0;
+    boundaries.length = 0;
+    ghosts.length = 0;
+    if (villains) villains.length = 0;    
 
     gameState.hasVisitedExtraLevel = false
 
-    await drawStaticMap()
+    initClassicLevel({ pellets, powerUps, boundaries, ghosts, player })    
 
     gameState.gameRunning = true
     gameState.score = 0
@@ -249,6 +263,8 @@ async function init() {
     animate(performance.now())
 }
 
+let animationId;
+
 function animate(timestamp = performance.now()) {
     gameState.animationId = requestAnimationFrame(animate)
     // c.clearRect(0, 0, canvas.width, canvas.height)
@@ -293,16 +309,26 @@ function animate(timestamp = performance.now()) {
         return
     }
 
-    if (checkWin(pellets) && player.physicsMode === 'NORMAL') {
+    // Om vi precis stängt en meny, vänta en frame med att kolla vinst
+    if (gameState.justResumed) {
+        gameState.justResumed = false;
+        return; 
+    }
+
+    if (checkWin(pellets) && player.physicsMode !== 'SPACE' && gameState.justResumed === false) {
         handleGameOver(true)
     }
-    
-    // 4. RITA BANAN OCH SKÖTA PORTALER
 
     // 4. RITA BANAN OCH SKÖTA PORTALER
     const collidePortal = checkPortalCollision(player, boundaries);
 
     if (collidePortal) {
+        cancelAnimationFrame(gameState.animationId);
+
+        const pelletsToSave = [...pellets];
+
+        pellets.length = 0;
+
         // Här skapar vi det objekt som handlePortalEntry förväntar sig
         const config = {
             player,
@@ -335,9 +361,6 @@ function animate(timestamp = performance.now()) {
     // player.update(deltaTime)
     player.update(deltaTime)
 
-    console.log("player:", player);
-    console.log("ghosts:", ghosts);
-    console.log("villains:", villains);
 
     if (!player || !player.velocity) {
         console.error("PLAYER BROKEN", player)
@@ -350,10 +373,6 @@ function animate(timestamp = performance.now()) {
             }
         })
     }
-
-    // villains.forEach(villain => villain.update())
-
-    // game.js inuti animate()
 
         renderLevel({
         c,
