@@ -6,7 +6,7 @@ import { Pellet } from './items.js'
 import { classicLayout } from './classicMap.js'
 import { initClassicLevel } from './classicLevel.js'
 import { updateItems } from './itemsController.js'
-import { resolvePlayerGhostCollision, checkWin, gameState, damagePlayer } from './gameState.js'
+import { resolvePlayerGhostCollision, checkWin, gameState, damagePlayer, GAME_MODES } from './gameState.js'
 import { setupInput } from './inputHandler.js'
 import { initSpaceLevel } from './spaceLevel.js'
 import { handlePortalEntry, triggerPortalTimer, clearPortalTimers, checkPortalCollision } from './portalManager.js'
@@ -81,17 +81,37 @@ async function drawStaticMap() {
     tempPowerUps.forEach(powerUp => powerUp.draw(c))
 }
 
+function startCountdown(nextMode) {
+    gameState.mode = GAME_MODES.COUNTDOWN
+    gameState.gameRunning = false
+    gameState.countdownValue = 3
+    gameState.nextModeAfterCountdown = nextMode
+
+    const countdownInterval = setInterval(() => {
+        gameState.countdownValue--
+
+        if (gameState.countdownValue <= 0) {
+            clearInterval(countdownInterval)
+
+            gameState.mode = nextMode
+            gameState.gameRunning = true
+        }
+    }, 1000)
+}
+
 function returnToMainMap() {
-    cancelAnimationFrame(gameState.animationId)
+    // cancelAnimationFrame(gameState.animationId)
 
     boundaries.length = 0
     pellets.length = 0
     powerUps.length = 0
     villains.length = 0
 
+    gameState.currentLevel = 'CLASSIC'
+
     initClassicLevel({ pellets, powerUps, boundaries, ghosts, player })
 
-    player.physicsMode = 'NORMAL'
+    startCountdown(GAME_MODES.CLASSIC)
     gameState.justResumed = true
 
     if (lastMainPosition) {
@@ -132,35 +152,40 @@ function returnToMainMap() {
         }))
     })
 
-    setTimeout(() => {
-        animate()
-    }, 100)
+    gameState.gameRunning = true
+    gameState.justResumed = true
 }
 
 
 
 function togglePause() {
-    if (gameState.gameRunning) {
+    if (gameState.mode === GAME_MODES.PAUSED) {
+        hideUIOverlay()
+
+        const resumeMode =
+            player.physicsMode === 'SPACE'
+                ? GAME_MODES.SPACE
+                : GAME_MODES.CLASSIC
+
+        startCountdown(resumeMode)
+
+    } else {
+        gameState.mode = GAME_MODES.PAUSED
         gameState.gameRunning = false
-        cancelAnimationFrame(gameState.animationId)
 
         showMenu('PAUSED', {
             startGame: init,
             resumeGame: togglePause,
             resetToMain: () => location.reload()
         })
-    } else {
-        gameState.gameRunning = true
-        gameState.justResumed = true
-        hideUIOverlay()
-        animate()
     }
 }
 
 function handleGameOver(isWin) {
-    cancelAnimationFrame(gameState.animationId)
-    cancelAnimationFrame(animationId)
+    // cancelAnimationFrame(gameState.animationId)
+    // cancelAnimationFrame(animationId)
     gameState.gameRunning = false
+    gameState.mode = GAME_MODES.GAME_OVER
 
     const finalScore = gameState.streakScore + gameState.score
 
@@ -186,7 +211,7 @@ function handleGameOver(isWin) {
 }
 
 async function init() {
-    cancelAnimationFrame(gameState.animationId)
+    // cancelAnimationFrame(gameState.animationId)
 
     clearPortalTimers()
 
@@ -199,11 +224,12 @@ async function init() {
     ghosts.length = 0;
     if (villains) villains.length = 0;    
 
+    gameState.currentLevel = 'CLASSIC'
     gameState.hasVisitedExtraLevel = false
 
     initClassicLevel({ pellets, powerUps, boundaries, ghosts, player })    
 
-    gameState.gameRunning = true
+    startCountdown(GAME_MODES.CLASSIC)
     gameState.score = 0
     updateUI(gameState)
 
@@ -260,19 +286,61 @@ async function init() {
             y: 0
         }
     })
-    animate(performance.now())
 }
 
 let animationId;
 
-function animate(timestamp = performance.now()) {
+async function animate(timestamp = performance.now()) {
     gameState.animationId = requestAnimationFrame(animate)
-    // c.clearRect(0, 0, canvas.width, canvas.height)
-
     
+    if (!player) return
 
     let deltaTime = (timestamp - lastTime) / 1000; // Tid i sekunder sedan senaste frame
     lastTime = timestamp;
+
+    if (gameState.mode === GAME_MODES.COUNTDOWN) {
+        renderLevel({
+            c,
+            canvas,
+            player,
+            ghosts,
+            villains,
+            pellets,
+            powerUps,
+            boundaries,
+            activeEffects
+        })
+
+        c.save()
+        c.font = '48px Arial'
+        c.textAlign = 'center'
+        c.fillStyle = 'white'
+        c.fillText(
+            gameState.countdownValue > 0
+                ? gameState.countdownValue
+                : 'GO!',
+            canvas.width / 2,
+            canvas.height / 2
+        )
+        c.restore()
+
+        return
+    }
+
+    if (!gameState.gameRunning) {
+        renderLevel({
+            c,
+            canvas,
+            player,
+            ghosts,
+            villains,
+            pellets,
+            powerUps,
+            boundaries,
+            activeEffects
+        })
+        return
+    }
 
     if (isNaN(deltaTime) || deltaTime <= 0 || deltaTime > 0.033) {
         deltaTime = 1 / 60; 
@@ -288,14 +356,43 @@ function animate(timestamp = performance.now()) {
     })
 
     // 2. KÖR LOGIK BEROENDE AV FYSIKMODE
-    if (player.physicsMode === 'SPACE' && villains) {
-        updateSpaceMode({ player, villains, boundaries, keys, gameState, pellets, scoreEl: document.getElementById('scoreEl'), activeEffects, showMenu, returnToMainMap, handleGameOver, deltaTime })
+    switch (gameState.mode) {
+        case GAME_MODES.CLASSIC: {
+            const result = updateClassicMode({
+                player,
+                ghosts,
+                currentDirection,
+                nextDirection,
+                boundaries,
+                deltaTime
+            })
 
-    } else {
-        const result = updateClassicMode({ player, ghosts, currentDirection, nextDirection, boundaries, deltaTime })
-        currentDirection = result.currentDirection
-        nextDirection = result.nextDirection
+            currentDirection = result.currentDirection
+            nextDirection = result.nextDirection
+            break
+        }
 
+        case GAME_MODES.SPACE:
+            await updateSpaceMode({
+                player,
+                villains,
+                boundaries,
+                keys,
+                gameState,
+                pellets,
+                scoreEl: document.getElementById('scoreEl'),
+                activeEffects,
+                showMenu,
+                returnToMainMap,
+                handleGameOver,
+                deltaTime
+            })
+            break
+
+        case GAME_MODES.PAUSED:
+        case GAME_MODES.MENU:
+        case GAME_MODES.GAME_OVER:
+            return
     }
 
     // 3. KOLLISIONER & ITEMS (gemensamt för båda lägena)
@@ -315,7 +412,7 @@ function animate(timestamp = performance.now()) {
         return; 
     }
 
-    if (checkWin(pellets) && player.physicsMode !== 'SPACE' && gameState.justResumed === false) {
+    if (gameState.currentLevel === 'CLASSIC' && pellets.length === 0 && !gameState.hasVisitedExtraLevel) {
         handleGameOver(true)
     }
 
@@ -323,7 +420,7 @@ function animate(timestamp = performance.now()) {
     const collidePortal = checkPortalCollision(player, boundaries);
 
     if (collidePortal) {
-        cancelAnimationFrame(gameState.animationId);
+        // cancelAnimationFrame(gameState.animationId);
 
         const pelletsToSave = [...pellets];
 
@@ -336,7 +433,6 @@ function animate(timestamp = performance.now()) {
             pellets,
             powerUps,
             keys,
-            animate,
             canvas,
             c,
             initSpaceLevel,
@@ -356,6 +452,7 @@ function animate(timestamp = performance.now()) {
             return; 
         }
     }
+    
 
     // 🔥 NYTT: UPDATE ENTITIES
     // player.update(deltaTime)
@@ -392,6 +489,8 @@ window.onload = async () => {
     await drawStaticMap()
     highScoreEl.innerText = localStorage.getItem('pacman-highscore') || 0
     showMenu('START', { startGame: init })
+
+    animate(performance.now())
 }
 
 setupInput({

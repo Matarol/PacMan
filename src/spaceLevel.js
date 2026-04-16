@@ -1,7 +1,7 @@
 import { Boundary } from "./boundary.js";
 import { Villain } from "./villain.js";
 import { spaceLayout, buildSpaceMap } from "./spaceMap.js";
-import { gameState } from "./gameState.js";
+import { gameState, GAME_MODES } from "./gameState.js";
 import { startExitPortalLoop } from "./portalManager.js";
 
 
@@ -9,7 +9,7 @@ import { startExitPortalLoop } from "./portalManager.js";
  * Allt som rör initiering av rymdbanan samlas här
  */
 
-export function initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUps, ghosts, keys, animate }) {
+export function initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUps, ghosts, keys }) {
 
     //Nollställ tangenter
     keys.w.pressed = false;
@@ -20,8 +20,8 @@ export function initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUp
     canvas.classList.add('space-background');
 
     //ändra via gameController-objektet istället för direkt variabel
+    gameState.currentLevel = 'SPACE'
     gameState.gameRunning = false;
-    cancelAnimationFrame(gameState.animationId);
 
     //Töm nuvarande listor
     boundaries.length = 0;
@@ -34,6 +34,7 @@ export function initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUp
 
     //Placera spelaren
     player.physicsMode = 'SPACE';
+    gameState.mode = GAME_MODES.SPACE;
     const pacmanStart = findStartPos(spaceLayout, 'p');
     const villainStart = findStartPos(spaceLayout, 'v');
 
@@ -55,7 +56,7 @@ export function initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUp
 
     setTimeout(() => {
         gameState.gameRunning = true;
-        animate();
+        gameState.justResumed = true;
     }, 1000);
 
     return newVillains;

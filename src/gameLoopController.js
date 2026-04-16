@@ -6,7 +6,7 @@ import { damagePlayer } from "./gameState.js";
 import { updateUI } from "./uiManager.js";
 import { handleVillainEaten } from "./villainController.js";
 
-export function updateSpaceMode({ player, villains, boundaries, keys, gameState, pellets, scoreEl, activeEffects, showMenu, returnToMainMap, handleGameOver, deltaTime }) {
+export async function updateSpaceMode({ player, villains, boundaries, keys, gameState, pellets, scoreEl, activeEffects, showMenu, returnToMainMap, handleGameOver, deltaTime }) {
 
     if (!player || !player.velocity) return
 
@@ -48,7 +48,7 @@ export function updateSpaceMode({ player, villains, boundaries, keys, gameState,
             if (v.miniature) {
                 const savedVillain = { ...v };
                 villains.splice(i, 1);
-                handleVillainEaten({ eatenVillain: savedVillain, pellets, scoreEl, activeEffects, showMenu, gameState, returnToMainMap });
+                await handleVillainEaten({ eatenVillain: savedVillain, pellets, scoreEl, activeEffects, showMenu, gameState, returnToMainMap });
                 return;
             } else {
                 damagePlayer(15, gameState);
