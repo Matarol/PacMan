@@ -137,7 +137,7 @@ export async function handleVillainEaten({eatenVillain, pellets, score, scoreEl,
     showMenu('BONUSLVLCOMPLETE', {
         resumeGame: () => {
             gameState.hasVisitedExtraLevel = true
-            returnToMainMap
+            returnToMainMap()
         },
         resetToMain: () => location.reload()
     }, {

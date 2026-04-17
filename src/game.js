@@ -102,6 +102,7 @@ function startCountdown(nextMode) {
 function returnToMainMap() {
     // cancelAnimationFrame(gameState.animationId)
 
+    activeEffects.length = 0
     boundaries.length = 0
     pellets.length = 0
     powerUps.length = 0
@@ -109,7 +110,7 @@ function returnToMainMap() {
 
     gameState.currentLevel = 'CLASSIC'
 
-    initClassicLevel({ pellets, powerUps, boundaries, ghosts, player })
+    initClassicLevel({ pellets: [], powerUps, boundaries, ghosts: [], player })
 
     startCountdown(GAME_MODES.CLASSIC)
     gameState.justResumed = true
@@ -139,7 +140,7 @@ function returnToMainMap() {
         }))
     })
 
-    pellets.length = 0
+    // pellets.length = 0
 
     lastPelletState.forEach(data => {
         pellets.push(new Pellet({
@@ -298,6 +299,14 @@ async function animate(timestamp = performance.now()) {
     let deltaTime = (timestamp - lastTime) / 1000; // Tid i sekunder sedan senaste frame
     lastTime = timestamp;
 
+    activeEffects.forEach((effect, index) => {
+        if (effect.opacity <= 0) {
+            activeEffects.splice(index, 1)
+        } else {
+            effect.update()
+        }
+    })
+
     if (gameState.mode === GAME_MODES.COUNTDOWN) {
         renderLevel({
             c,
@@ -412,7 +421,7 @@ async function animate(timestamp = performance.now()) {
         return; 
     }
 
-    if (gameState.currentLevel === 'CLASSIC' && pellets.length === 0 && !gameState.hasVisitedExtraLevel) {
+    if (gameState.currentLevel === 'CLASSIC' && pellets.length === 0) {
         handleGameOver(true)
     }
 
@@ -422,9 +431,9 @@ async function animate(timestamp = performance.now()) {
     if (collidePortal) {
         // cancelAnimationFrame(gameState.animationId);
 
-        const pelletsToSave = [...pellets];
+        // const pelletsToSave = [...pellets];
 
-        pellets.length = 0;
+        // pellets.length = 0;
 
         // Här skapar vi det objekt som handlePortalEntry förväntar sig
         const config = {

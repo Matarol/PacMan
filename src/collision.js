@@ -1,6 +1,9 @@
 import { Boundary } from './boundary.js'
 
 export function circleCollidesWithCircle(c1, c2) {
+    if (!c1 || !c2 || !c1.position || !c2.position) {
+        return false
+    }    
     return Math.hypot(
         c1.position.x - c2.position.x,
         c1.position.y - c2.position.y
@@ -8,6 +11,10 @@ export function circleCollidesWithCircle(c1, c2) {
 }
 
 export function circlesCollide(c1, c2) {
+    if (!c1 || !c2 || !c1.position || !c2.position) {
+        return false
+    }
+
     //Om objekten inte har en radius, anta att de är spelare (radius: 15)
     const r1 = c1.radius || 15
     const r2 = c2.radius || 15
