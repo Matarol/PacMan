@@ -72,9 +72,7 @@ export function checkPortalCollision(player, boundaries) {
 
 export function handlePortalEntry(config) {
     const { 
-        player, ghosts, pellets, powerUps, keys, 
-        animate, canvas, c, initSpaceLevel, gameState,
-        boundaries 
+        player, ghosts, pellets, powerUps, keys,canvas, c, initSpaceLevel, gameState, boundaries 
     } = config;
 
     gameState.hasVisitedExtraLevel = true;
@@ -97,7 +95,7 @@ export function handlePortalEntry(config) {
     powerUps.length = 0;
     ghosts.length = 0;
 
-    const villains = initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUps, ghosts, keys, animate });
+    const villains = initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUps, ghosts, keys });
 
     return {
         lastMainPosition,

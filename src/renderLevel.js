@@ -1,5 +1,6 @@
-﻿// renderLevel.js
-export function renderLevel({ c, canvas, player, ghosts, villains, pellets, powerUps, boundaries, activeEffects }) {
+﻿export function renderLevel({ c, canvas, player, ghosts, villains, pellets, powerUps, boundaries, activeEffects }) {
+
+    if (!player) return
     
     // 1. HANTERA BAKGRUND (Rensa skärmen)
     if (player.physicsMode === 'SPACE') {

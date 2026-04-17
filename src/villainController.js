@@ -91,7 +91,29 @@ export function shrunkenVillain(villain) {
     4000)
 }
 
-export function handleVillainEaten({eatenVillain, pellets, score, scoreEl, activeEffects, gameController, showMenu, gameState, returnToMainMap}) {
+function drainPelletsWithPoints(pellets, activeEffects) {
+    return new Promise((resolve) => {
+        const drainInterval = setInterval(() => {
+            if (pellets.length > 0) {
+                const p = pellets.pop()
+
+                activeEffects.push(new FloatingText({
+                    x: p.position.x,
+                    y: p.position.y,
+                    text: '+10',
+                    color: 'white'
+                }))
+            } else {
+                clearInterval(drainInterval)
+
+                //allow final floating texts to finish animating
+                setTimeout(resolve, 1500)
+            }
+        }, 50)
+    })
+}
+
+export async function handleVillainEaten({eatenVillain, pellets, score, scoreEl, activeEffects, gameController, showMenu, gameState, returnToMainMap}) {
     // 1. Stoppa spelet
     gameState.gameRunning = false;
 
@@ -110,33 +132,15 @@ export function handleVillainEaten({eatenVillain, pellets, score, scoreEl, activ
     scoreEl.innerText = gameState.score;
 
     // 4. "Sug in" pellets visuellt
-    const drainInterval = setInterval(() => {
-        if (pellets.length > 0) {
-            const p = pellets.pop();
-            activeEffects.push(new FloatingText({
-                x: p.position.x,
-                y: p.position.y,
-                text: '+10',
-                color: 'white'
-            }));
-        } else {
-            clearInterval(drainInterval);
-            
-            // 5. NÄR ALLA PELLETS ÄR KLARA: Visa menyn!
-            // Vi lägger en liten delay så man hinner se sista effekten
-            setTimeout(() => {
-                cancelAnimationFrame(gameState.animationId); // Stoppa loopen helt
-                
-                showMenu('BONUSLVLCOMPLETE', {
-                    resumeGame: () => {
-                        gameState.hasVisitedExtraLevel = true;
-                        returnToMainMap();
-                    },
-                    resetToMain: () => location.reload()
-                }, {
-                    score: totalBonus // Skickar med bonusen till menyn
-                });
-            }, 1800);
-        }
-    }, 50);
+    await drainPelletsWithPoints(pellets, activeEffects)
+
+    showMenu('BONUSLVLCOMPLETE', {
+        resumeGame: () => {
+            gameState.hasVisitedExtraLevel = true
+            returnToMainMap()
+        },
+        resetToMain: () => location.reload()
+    }, {
+        score: totalBonus
+    })
 }

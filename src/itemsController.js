@@ -7,7 +7,6 @@ export function updateItems({player, pellets, powerUps, ghosts, villains, scoreE
     // Spelare krockar med powerUps
     for (let i = powerUps.length - 1; i >= 0; i-- ) {
         const powerUp = powerUps[i]
-        // powerUp.draw()
 
         if (circleCollidesWithCircle(powerUp, player)) {
             if (player.physicsMode === 'SPACE' && villains && villains.length > 0) {
@@ -32,7 +31,7 @@ export function updateItems({player, pellets, powerUps, ghosts, villains, scoreE
         if (circleCollidesWithCircle(pellet, player)) {
             if (pellet.isPortal) {
                 returnToMainMap()
-                continue
+                return { result: 'level_changed' }
             }
 
             if (pellet.isDangerous) {

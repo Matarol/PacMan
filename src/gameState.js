@@ -1,10 +1,23 @@
 import { circleCollidesWithCircle } from "./collision.js"
 
+export const GAME_MODES = {
+    MENU: 'MENU',
+    CLASSIC: 'CLASSIC',
+    SPACE: 'SPACE',
+    PAUSED: 'PAUSED',
+    COUNTDOWN: 'COUNTDOWN',
+    GAME_OVER: 'GAME_OVER'
+}
+
 export const gameState = {
+    mode: GAME_MODES.MENU,
     hasVisitedExtraLevel: false,
     health: 100,
     maxHealth: 100,
     gameRunning: false,
+    currentLevel: 'CLASSIC',
+    countdownValue: 0,
+    nextModeAfterCountdown: null,
     animationId: null,
     score: 0,
     streakScore: 0,

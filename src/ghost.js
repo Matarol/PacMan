@@ -6,8 +6,10 @@
         this.radius = 15
         this.color = color
         this.prevCollisions = []
-        this.speed = 2
+        // this.speed = 2
         this.scared = false
+        this.angry = false
+        this.timer = 0
         this.eyesOffsetX = 0
         this.eyesOffsetY = 0
         this.lastDirection = ''
@@ -26,7 +28,7 @@
             )
         }
         c.lineTo(this.position.x - this.radius, this.position.y)
-        c.fillStyle = this.scared ? 'blue' : this.color
+        c.fillStyle = this.scared ? 'blue' : (this.angry ? 'purple' : this.color)
         c.fill()
         c.closePath()
 
@@ -60,17 +62,49 @@
         c.fill()
     }
 
-    update(deltaTime) {        
+    becomeScared() {
+        this.scared = true
+        this.angry = false
+        this.timer = 300
+    }
+
+    update(deltaTime, playerPosition) {
+        
+        if (this.timer > 0) {
+            this.timer -= deltaTime * 60
+
+
+            if (this.timer <= 0) {
+                if (this.scared) {
+                    this.scared = false
+                    this.angry = true
+                    this.timer = 300
+                } else if (this.angry) {
+                    this.angry = false
+                }
+            }
+        }
         this.position.x += this.velocity.x * deltaTime
         this.position.y += this.velocity.y * deltaTime
 
         this.eyesOffsetX = 0
         this.eyesOffsetY = 0
 
-        if (this.velocity.x > 0) this.eyesOffsetX = 1.5
-        else if (this.velocity.x < 0) this.eyesOffsetX = -1.5
+        const maxPupilsOffset = 1.5
 
-        if (this.velocity.y > 0) this.eyesOffsetY = 1.5
-        else if (this.velocity.y < 0) this.eyesOffsetY = -1.5
+        if (this.angry && playerPosition) {
+            const dx = playerPosition.x - this.position.x
+            const dy = playerPosition.y - this.position.y
+            const angle = Math.atan2(dy, dx)
+            this.eyesOffsetX = Math.cos(angle) * maxPupilsOffset
+            this.eyesOffsetY = Math.sin(angle) * maxPupilsOffset
+        }
+        else if (!this.scared) {
+            if (this.velocity.x > 0) this.eyesOffsetX = maxPupilsOffset
+            else if (this.velocity.x < 0) this.eyesOffsetX = -maxPupilsOffset
+
+            if (this.velocity.y > 0) this.eyesOffsetY = maxPupilsOffset
+            else if (this.velocity.y < 0) this.eyesOffsetY = -maxPupilsOffset
+        }
     }
 }

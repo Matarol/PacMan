@@ -1,8 +1,40 @@
 import { Ghost } from "./ghost.js"
 import { circleCollidesWithRectangle, isCenteredInTile } from "./collision.js"
 
-// Lägg till en flagga på ghost-objektet (utanför denna funktion, t.ex. när ghost skapas)
-// ghost.lastTile = {x: 0, y: 0} 
+function getBestDirection(ghost, choices, targetPos) {
+    let bestDir = choices[0]
+
+    let bestDist = ghost.scared ? -Infinity : Infinity
+
+    choices.forEach(dir => {
+        let nextX = ghost.position.x
+        let nextY = ghost.position.y
+        const tileSize = 40
+    
+        if (dir === 'up') nextY -= tileSize
+        if (dir === 'down') nextY += tileSize
+        if (dir === 'left') nextX -= tileSize
+        if (dir === 'right') nextX += tileSize
+
+        const distanceToTargget = Math.hypot(targetPos.x - nextX, targetPos.y - nextY)
+
+        if (ghost.angry) {
+            // När spökena är arga så jagar dem
+            if (distanceToTargget < bestDist) {
+                bestDist = distanceToTargget
+                bestDir = dir
+            }
+        } else if (ghost.scared) {
+            // När spökena är rädda så undviker dem målet
+            if (distanceToTargget > bestDist) {
+                bestDist = distanceToTargget
+                bestDir = dir
+            }
+        }
+    })
+
+    return bestDir
+}
 
 export function updateGhosts(ghosts, boundaries, player, deltaTime) {
     ghosts.forEach(ghost => {
@@ -69,7 +101,13 @@ export function updateGhosts(ghosts, boundaries, player, deltaTime) {
                 // Om vi är blockerade eller i en korsning, välj ny väg
                 if (validOptions.length > 0 || pathways.length > 0) {
                     const finalChoices = validOptions.length > 0 ? validOptions : pathways;
-                    const direction = finalChoices[Math.floor(Math.random() * finalChoices.length)];
+                    let direction;
+
+                    if (ghost.angry || ghost.scared) {
+                        direction = getBestDirection(ghost, finalChoices, player.position);
+                    } else {
+                        direction = finalChoices[Math.floor(Math.random() * finalChoices.length)];
+                    }
 
                     ghost.lastDirection = direction
 
@@ -83,9 +121,10 @@ export function updateGhosts(ghosts, boundaries, player, deltaTime) {
 
             // Slutlig rörelse
             if (!isBlocked) {
-                ghost.update(stepDelta);
+                ghost.update(stepDelta, player.position);
             } else {
                 // Om blockerad, nollställ velocity så den inte "darrar" in i väggen
+                ghost.update(0, player.position);
                 ghost.velocity.x = 0;
                 ghost.velocity.y = 0;
             }
@@ -95,11 +134,6 @@ export function updateGhosts(ghosts, boundaries, player, deltaTime) {
 
 export function scareGhosts(ghosts) {
     ghosts.forEach(ghost => {
-        ghost.scared = true
-
-        setTimeout(() => {
-            ghost.scared = false
-        },
-            4000)
-    })
+        if (ghost.becomeScared) ghost.becomeScared();
+    });
 }
