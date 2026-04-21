@@ -65,7 +65,7 @@
     becomeScared() {
         this.scared = true
         this.angry = false
-        this.timer = 300
+        this.timer = 400
     }
 
     update(deltaTime, playerPosition) {
@@ -78,7 +78,7 @@
                 if (this.scared) {
                     this.scared = false
                     this.angry = true
-                    this.timer = 300
+                    this.timer = 600
                 } else if (this.angry) {
                     this.angry = false
                 }

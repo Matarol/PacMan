@@ -1,5 +1,6 @@
 ﻿import { Player } from "./player.js"
 import { circleCollidesWithRectangle, circlesCollide, getRepulsionVelocity, isCenteredInTile } from "./collision.js"
+import { playSound } from "./audioManager.js"
 
 export function handlePlayerMovement(player, currentDirection, nextDirection, boundaries, deltaTime) {
   const speed = 200
@@ -40,8 +41,8 @@ export function handlePlayerMovement(player, currentDirection, nextDirection, bo
   // 👉 Continue moving in current direction
   if (currentDirection) {
     const velocity = directions[currentDirection]
-
     let blocked = false
+    let currentlyTouchingPortal = false // Skapa en lokal variabel för denna frame
 
     for (let boundary of boundaries) {
       if (circleCollidesWithRectangle({
@@ -50,11 +51,26 @@ export function handlePlayerMovement(player, currentDirection, nextDirection, bo
           y: velocity.y * deltaTime
         } },
         rectangle: boundary
-      }) &&
-    !boundary.isPortal) {
-        blocked = true
-        break
+      })) {
+
+        if (boundary.isPortal) {
+          currentlyTouchingPortal = true // Vi vet att vi nuddar en portal
+          if (!player.isInPortal) {
+            playSound('portal')
+            player.isInPortal = true
+          }
+        } else {
+          blocked = true
+          // Vi behöver inte sätta player.isInPortal = false här längre
+          break
+        }
       }
+    }
+
+    // --- HÄR SKA NOLLSTÄLLNINGEN LIGGA (Utanför loopen) ---
+    // Om vi inte nuddade någon portal alls under hela loopen, nollställ flaggan
+    if (!currentlyTouchingPortal) {
+      player.isInPortal = false
     }
 
     if (!blocked) {

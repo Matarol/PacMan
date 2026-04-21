@@ -2,6 +2,7 @@ import { Villain } from "./villain.js";
 import { circleCollidesWithRectangle } from "./collision.js";
 import { gameState } from "./gameState.js";
 import { FloatingText } from "./floatingText.js";
+import { playSound } from "./audioManager.js";
 
 export function updateVillain(villain, player, boundaries) {
     if (!villain || !player) return
@@ -100,7 +101,7 @@ function drainPelletsWithPoints(pellets, activeEffects) {
                 activeEffects.push(new FloatingText({
                     x: p.position.x,
                     y: p.position.y,
-                    text: '+10',
+                    text: '+20',
                     color: 'white'
                 }))
             } else {
@@ -126,10 +127,12 @@ export async function handleVillainEaten({eatenVillain, pellets, score, scoreEl,
     }));
 
     // 3. Beräkna bonus och uppdatera poäng
-    const pelletBonus = pellets.length * 10;
+    const pelletBonus = pellets.length * 20;
     const totalBonus = 500 + pelletBonus;
     gameState.score += totalBonus;
     scoreEl.innerText = gameState.score;
+
+    playSound('win')
 
     // 4. "Sug in" pellets visuellt
     await drainPelletsWithPoints(pellets, activeEffects)

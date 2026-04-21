@@ -1,3 +1,4 @@
+import { playSound } from "./audioManager.js"
 import { circleCollidesWithCircle } from "./collision.js"
 
 export const GAME_MODES = {
@@ -32,6 +33,7 @@ export function resolvePlayerGhostCollision(player, ghosts) {
 
         if (circleCollidesWithCircle(player, ghost)) {
             if (ghost.scared) {
+                playSound('eat-ghost')
                 ghosts.splice(i, 1)
                 return { result: 'ghost_eaten' }
             } else {
@@ -56,6 +58,7 @@ export function damagePlayer(amount, gameState) {
     if (now - gameState.lastDamageTime < 800) return { result: null }
 
     gameState.health -= amount
+    playSound('damage-by-villain')
     gameState.lastDamageTime = now
 
     if (gameState.health <= 0) {
