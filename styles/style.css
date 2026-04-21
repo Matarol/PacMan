@@ -12,6 +12,7 @@ body {
 }
 
 main {
+    position:relative;
     display: flex;
     flex-direction: column;
     align-items: center;    /* Centrerar kartan horisontellt */
@@ -83,13 +84,14 @@ button:active {
 
 #healthContainer {
   position: absolute;
-  top: 229px;
-  left: 640px;
+  top: 155px;
+  left: 30px;
   width: 150px;
   height: 15px;
   background: rgba(255,255,255,0.2);
   border-radius: 10px;
   overflow: hidden;
+  z-index: 10;
 }
 
 #healthBar {

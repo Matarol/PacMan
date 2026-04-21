@@ -5,6 +5,7 @@ import { circleCollidesWithCircle, getCircleRepulsion } from "./collision.js";
 import { damagePlayer } from "./gameState.js";
 import { updateUI } from "./uiManager.js";
 import { handleVillainEaten } from "./villainController.js";
+import { playSound } from "./audioManager.js";
 
 export async function updateSpaceMode({ player, villains, boundaries, keys, gameState, pellets, scoreEl, activeEffects, showMenu, returnToMainMap, handleGameOver, deltaTime }) {
 
@@ -51,13 +52,14 @@ export async function updateSpaceMode({ player, villains, boundaries, keys, game
                 await handleVillainEaten({ eatenVillain: savedVillain, pellets, scoreEl, activeEffects, showMenu, gameState, returnToMainMap });
                 return;
             } else {
-                damagePlayer(15, gameState);
+                damagePlayer(15, gameState);                
                 updateUI(gameState);
             }
         }
     }
 
     if (gameState.health <= 0) {
+        playSound('lose')
         handleGameOver(false);
     }
 

@@ -1,6 +1,7 @@
 import { circleCollidesWithCircle } from "./collision.js"
 import { scareGhosts } from "./ghostController.js"
 import { shrunkenVillain } from "./villainController.js"
+import { playSound } from "./audioManager.js"
 
 export function updateItems({player, pellets, powerUps, ghosts, villains, scoreEl, returnToMainMap, damagePlayer, gameState}) {  
 
@@ -10,13 +11,15 @@ export function updateItems({player, pellets, powerUps, ghosts, villains, scoreE
 
         if (circleCollidesWithCircle(powerUp, player)) {
             if (player.physicsMode === 'SPACE' && villains && villains.length > 0) {
+                playSound('power-up')
                 powerUps.splice(i, 1)
                 villains.forEach(v => {
                     if (!v) return
                     shrunkenVillain(v)
                 })
             } else {
-            powerUps.splice(i, 1)
+                playSound('power-up')
+                powerUps.splice(i, 1)
 
             //Spöken blir skrämda
             scareGhosts(ghosts)
@@ -30,6 +33,7 @@ export function updateItems({player, pellets, powerUps, ghosts, villains, scoreE
 
         if (circleCollidesWithCircle(pellet, player)) {
             if (pellet.isPortal) {
+                playSound('portal')
                 returnToMainMap()
                 return { result: 'level_changed' }
             }
@@ -40,11 +44,17 @@ export function updateItems({player, pellets, powerUps, ghosts, villains, scoreE
                 return { result: 'player_damaged' }
 
             }
+
+            let points = 10 //poäng i classicLevel
+
+            if (player.physicsMode === 'SPACE') {
+                points = 100
+            }
             
+            playSound('eat-pellet')
             pellets.splice(i, 1)
-            gameState.score += 10
+            gameState.score += points
             scoreEl.innerText = gameState.score
         }
     }
-
 }

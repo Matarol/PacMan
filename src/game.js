@@ -13,6 +13,7 @@ import { handlePortalEntry, triggerPortalTimer, clearPortalTimers, checkPortalCo
 import { updateUI, hideUIOverlay } from './uiManager.js'
 import { updateClassicMode, updateSpaceMode } from './gameLoopController.js'
 import { renderLevel } from './renderLevel.js'
+import { playSound } from './audioManager.js'
 
 const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
@@ -29,6 +30,8 @@ let lastGhostPositions = []
 let lastPelletState = []
 let activeEffects = [] // Array för att hålla reda på texterna
 let lastTime = performance.now()
+let logicalWidth = classicLayout[0].length * Boundary.width;
+let logicalHeight = classicLayout.length * Boundary.height;
 
 const keys = {
     w: { pressed: false },
@@ -43,8 +46,8 @@ let nextDirection = null
 async function drawStaticMap() {
     const dpr = window.devicePixelRatio || 1;
 
-    const logicalWidth = classicLayout[0].length * Boundary.width;
-    const logicalHeight = classicLayout.length * Boundary.height;
+    // const logicalWidth = classicLayout[0].length * Boundary.width;
+    // const logicalHeight = classicLayout.length * Boundary.height;
 
     const scale = Math.min(window.innerWidth / logicalWidth, 1);
 
@@ -64,10 +67,6 @@ async function drawStaticMap() {
     const tempPowerUps = [];
     const tempPellets = [];
 
-
-    // boundaries.length = 0;
-    // pellets.length = 0;
-    // powerUps.length = 0;
 
     initClassicLevel({ pellets: tempPellets, powerUps: tempPowerUps, boundaries: tempBoundaries, ghosts: [] , player: null })
 
@@ -183,8 +182,6 @@ function togglePause() {
 }
 
 function handleGameOver(isWin) {
-    // cancelAnimationFrame(gameState.animationId)
-    // cancelAnimationFrame(animationId)
     gameState.gameRunning = false
     gameState.mode = GAME_MODES.GAME_OVER
 
@@ -321,15 +318,20 @@ async function animate(timestamp = performance.now()) {
         })
 
         c.save()
-        c.font = '48px Arial'
+        c.font = '56px Arial'
         c.textAlign = 'center'
+        c.textBaseline = 'middle'
         c.fillStyle = 'white'
+
+        const centerX = logicalWidth / 2;
+        const centerY = logicalHeight / 2;
+
         c.fillText(
             gameState.countdownValue > 0
                 ? gameState.countdownValue
                 : 'GO!',
-            canvas.width / 2,
-            canvas.height / 2
+            centerX,
+            centerY
         )
         c.restore()
 
@@ -411,6 +413,7 @@ async function animate(timestamp = performance.now()) {
     if (itemResult?.result === 'player_damaged') updateUI(gameState)
 
     if (collisionResult.result === 'player_dead' || gameState.health <= 0) {
+            playSound('lose')
         handleGameOver(false)
         return
     }
@@ -422,6 +425,7 @@ async function animate(timestamp = performance.now()) {
     }
 
     if (gameState.currentLevel === 'CLASSIC' && pellets.length === 0) {
+        playSound('win')
         handleGameOver(true)
     }
 
