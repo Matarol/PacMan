@@ -8,6 +8,23 @@ const uiOverlay = document.getElementById('ui-overlay');
  * Uppdaterar alla synliga mätare och texter baserat på speletes nuvarande tillstånd.
  */
 
+export function positionHealthBar(canvas) {
+    const healthContainer = document.getElementById('healthContainer')
+    const rect = canvas.getBoundingClientRect()
+
+    const padding = 20
+    const barWidth = rect.width * 0.22
+
+    healthContainer.style.position = 'absolute'
+    healthContainer.style.width = `${barWidth}px`
+
+    healthContainer.style.left =
+        `${rect.left - barWidth * 3 - padding}px`
+
+    healthContainer.style.top =
+        `${rect.top + padding}px`
+}
+
 export function updateUI(gameState) {
     if (scoreEl) scoreEl.innerText = gameState.score;
     if (streakScoreEl) streakScoreEl.innerText = gameState.streakScore;

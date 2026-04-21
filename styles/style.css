@@ -22,7 +22,7 @@ main {
 
 canvas {
     display: block;
-    width: 100%;
+    /* width: 100%; */
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -83,9 +83,6 @@ button:active {
 }
 
 #healthContainer {
-  position: absolute;
-  top: 155px;
-  left: 30px;
   width: 150px;
   height: 15px;
   background: rgba(255,255,255,0.2);
