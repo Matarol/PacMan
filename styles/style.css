@@ -22,7 +22,6 @@ main {
 
 canvas {
     display: block;
-    /* width: 100%; */
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -41,13 +40,20 @@ span {
     padding-right: 20px;
 }
 
+#gameContainer {
+    position: relative;
+    display: inline-block;
+}
+
 #ui-overlay {
     position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%);
     justify-content: center;
     text-align: center;
     padding: 15px;
     gap: 15px;
-    margin: 15px;
     color: aliceblue;
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
@@ -83,12 +89,15 @@ button:active {
 }
 
 #healthContainer {
-  width: 150px;
-  height: 15px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 10px;
-  overflow: hidden;
-  z-index: 10;
+    position: absolute;
+    top: 10px;
+    left: 40px;
+    width: 150px;
+    height: 15px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 10;
 }
 
 #healthBar {
