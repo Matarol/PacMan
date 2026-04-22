@@ -138,6 +138,7 @@ button:active {
     }
 
     main {
+        display: inline-flex;
         padding-top: 10px; /* Lite marginal så det inte nuddar kanten */
         justify-content: flex-start;
         width: 100%;
@@ -148,7 +149,7 @@ button:active {
            långt under spelet om spelet ligger i toppen. */
         top: 20%; 
         transform: translate(-50%, 0); /* Centrera bara horisontellt */
-        width: 90%; /* Gör menyn lite bredare så den är lättare att klicka på */
+        width: 80%; /* Gör menyn lite bredare så den är lättare att klicka på */
     }
 
     #mobileControls {
