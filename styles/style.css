@@ -41,6 +41,11 @@ span {
     padding-right: 20px;
 }
 
+#gameContainer {
+    position: relative;
+    display: inline-block;
+}
+
 #ui-overlay {
     position: absolute;
     justify-content: center;
