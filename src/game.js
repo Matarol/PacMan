@@ -10,7 +10,7 @@ import { resolvePlayerGhostCollision, checkWin, gameState, damagePlayer, GAME_MO
 import { setupInput } from './inputHandler.js'
 import { initSpaceLevel } from './spaceLevel.js'
 import { handlePortalEntry, triggerPortalTimer, clearPortalTimers, checkPortalCollision } from './portalManager.js'
-import { updateUI, hideUIOverlay, positionHealthBar } from './uiManager.js'
+import { updateUI, hideUIOverlay } from './uiManager.js'
 import { updateClassicMode, updateSpaceMode } from './gameLoopController.js'
 import { renderLevel } from './renderLevel.js'
 import { playSound } from './audioManager.js'
@@ -502,11 +502,8 @@ window.onload = async () => {
     await drawStaticMap()
     highScoreEl.innerText = localStorage.getItem('pacman-highscore') || 0
     showMenu('START', { startGame: init })
-    positionHealthBar(canvas)
     animate(performance.now())
 }
-
-window.addEventListener('resize', positionHealthBar)
 
 setupInput({
     setNextDirection: (dir) => { nextDirection = dir },
