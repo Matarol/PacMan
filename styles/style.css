@@ -133,12 +133,28 @@ button:active {
 }
 
 @media (max-width: 650px) {
-    #mobileControls {
-        z-index: 1000;
-        display: block;
-        min-width: 350px;
+    body {
+        align-items: flex-start; /* Flytta allt till toppen */
     }
+
     main {
-        justify-content: center;
+        padding-top: 10px; /* Lite marginal så det inte nuddar kanten */
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    #ui-overlay {
+        /* På mobil vill vi inte ha 50% top, för då hamnar menyn 
+           långt under spelet om spelet ligger i toppen. */
+        top: 20%; 
+        transform: translate(-50%, 0); /* Centrera bara horisontellt */
+        width: 90%; /* Gör menyn lite bredare så den är lättare att klicka på */
+    }
+
+    #mobileControls {
+        display: block; /* Visa pilarna */
+        z-index: 1000;
+        position: fixed;
+        bottom: 20px;
     }
 }
