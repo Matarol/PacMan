@@ -12,7 +12,12 @@
         this.timer = 0
         this.eyesOffsetX = 0
         this.eyesOffsetY = 0
-        this.lastDirection = ''
+        if (velocity.x > 0) this.lastDirection = 'right'
+        else if (velocity.x < 0) this.lastDirection = 'left'
+        else if (velocity.y > 0) this.lastDirection = 'down'
+        else if (velocity.y < 0) this.lastDirection = 'up'
+        else this.lastDirection = ''
+        this.cameFrom = ''
     }
 
     draw(c) {
