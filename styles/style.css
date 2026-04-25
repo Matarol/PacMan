@@ -1,14 +1,15 @@
 ﻿* {
     font-family: sans-serif;
+    box-sizing: border-box;
 }
 
 body {
-    margin: 0;
+    /* margin: 0; */
     background-color: rgb(0, 0, 0);
-    display: flex;         /* Lägg flex även här för säkerhets skull */
+    /* display: flex;         /* Lägg flex även här för säkerhets skull
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    min-height: 100vh; */
 }
 
 main {
@@ -50,7 +51,6 @@ span {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -60%);
-    justify-content: center;
     text-align: center;
     padding: 15px;
     gap: 15px;
@@ -111,51 +111,22 @@ button:active {
     display: none !important;
 }
 
-#mobileControls {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-}
-
-#mobileControls button {
-    font-size: 24px;
-    width: 100px;
-    height: 60px;
-    padding: 15px 20px;
-    margin: 5px;
-    border-radius: 10px;
-    border: none;
-    background: #333;
-    color: white;
-}
-
 @media (max-width: 650px) {
     body {
         align-items: flex-start; /* Flytta allt till toppen */
     }
 
     main {
-        display: inline-flex;
+        display: flex;
         padding-top: 10px; /* Lite marginal så det inte nuddar kanten */
         justify-content: flex-start;
+        align-items: center;
         width: 100%;
     }
 
     #ui-overlay {
-        /* På mobil vill vi inte ha 50% top, för då hamnar menyn 
-           långt under spelet om spelet ligger i toppen. */
         top: 20%; 
         transform: translate(-50%, 0); /* Centrera bara horisontellt */
         width: 80%; /* Gör menyn lite bredare så den är lättare att klicka på */
-    }
-
-    #mobileControls {
-        display: block; /* Visa pilarna */
-        z-index: 1000;
-        position: fixed;
-        bottom: 20px;
     }
 }

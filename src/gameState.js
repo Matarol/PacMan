@@ -45,11 +45,25 @@ export function resolvePlayerGhostCollision(player, ghosts) {
     return { result: null }
 }
 
-export function checkWin(pellets) {
-    pellets.filter(p => !p.isDangerous && p.constructor.name === 'Pellet');
+export function checkWin(world) {
+    const { pellets } = world;
 
-    return !pellets.some(p => !p.isDangerous)
+    if (!pellets || pellets.length === 0) return true;
+    
+    // Vi filtrerar bort allt som inte är en vanlig mat-pellet.
+    // Vi vill bara vinna om de klassiska, icke-farliga pelletsen är slut.
+    const normalPelletsLeft = pellets.filter(p => !p.isDangerous);
+
+    console.log("Normala pellets kvar: ", normalPelletsLeft.length)
+
+    return normalPelletsLeft === 0;
 }
+
+// export function checkWin(pellets) {
+//     pellets.filter(p => !p.isDangerous && p.constructor.name === 'Pellet');
+
+//     return !pellets.some(p => !p.isDangerous)
+// }
 
 export function damagePlayer(amount, gameState) {
     const now = Date.now()

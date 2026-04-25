@@ -53,8 +53,8 @@ export function updateGhosts(ghosts, boundaries, player, deltaTime) {
                 if (circleCollidesWithRectangle({ circle: { ...ghost, velocity: { x: 0, y: -checkDist } }, rectangle: boundary })) collisions.push('up');
             });
 
-            const currentTileX = Math.round(ghost.x / 40); // Ersätt 40 med din tileSize
-            const currentTileY = Math.round(ghost.y / 40);
+            const currentTileX = Math.round(ghost.position.x / 40); // Ersätt 40 med din tileSize
+            const currentTileY = Math.round(ghost.position.y / 40);
 
             // LOGIK: Ändra bara riktning om vi är i mitten ELLER blockerade
             const isAtNewTile = !ghost.lastTile || (ghost.lastTile.x !== currentTileX || ghost.lastTile.y !== currentTileY);
@@ -70,6 +70,11 @@ export function updateGhosts(ghosts, boundaries, player, deltaTime) {
 
                 if (isCenteredInTile(ghost)) {
                     ghost.lastTile = { x: currentTileX, y: currentTileY };
+
+                    if (ghost.velocity.x > 0) ghost.cameFrom = 'left';
+                    else if (ghost.velocity.x < 0) ghost.cameFrom = 'right';
+                    else if (ghost.velocity.y > 0) ghost.cameFrom = 'up';
+                    else if (ghost.velocity.y < 0) ghost.cameFrom = 'down';
                 }
 
                 let currentMoveDir = '';
@@ -80,7 +85,7 @@ export function updateGhosts(ghosts, boundaries, player, deltaTime) {
                 else if (ghost.velocity.y < 0) currentMoveDir = 'up';
 
                 //Om spöket står still pga kollision, sätts currentMoveDir utifrån lastDir
-                if (currentMoveDir === 0 && ghost.lastDirection) {
+                if (currentMoveDir === '' && ghost.lastDirection) {
                     currentMoveDir = ghost.lastDirection;
                 }
 
@@ -89,14 +94,15 @@ export function updateGhosts(ghosts, boundaries, player, deltaTime) {
                 const pathways = directions.filter(dir => !collisions.includes(dir));
 
                 // Hitta motsatt riktning (för att undvika 180-svängar)
-                let opposite = '';
-                if (ghost.velocity.x > 0) opposite = 'left';
-                else if (ghost.velocity.x < 0) opposite = 'right';
-                else if (ghost.velocity.y > 0) opposite = 'up';
-                else if (ghost.velocity.y < 0) opposite = 'down';
+                const forbiddenDirection = ghost.cameFrom
+                // let opposite = '';
+                // if (ghost.lastDirection === 'right') opposite = 'left';
+                // else if (ghost.lastDirection === 'left') opposite = 'right';
+                // else if (ghost.lastDirection === 'down') opposite = 'up';
+                // else if (ghost.lastDirection === 'up') opposite = 'down';
 
                 // Prioritera vägar som INTE är tillbaka där vi kom ifrån
-                let validOptions = pathways.filter(p => p !== opposite);
+                let validOptions = pathways.filter(dir => dir !== forbiddenDirection);
                 
                 // Om vi är blockerade eller i en korsning, välj ny väg
                 if (validOptions.length > 0 || pathways.length > 0) {
@@ -124,9 +130,7 @@ export function updateGhosts(ghosts, boundaries, player, deltaTime) {
                 ghost.update(stepDelta, player.position);
             } else {
                 // Om blockerad, nollställ velocity så den inte "darrar" in i väggen
-                ghost.update(0, player.position);
-                ghost.velocity.x = 0;
-                ghost.velocity.y = 0;
+                ghost.update(0, player.position);                
             }
         }
     });

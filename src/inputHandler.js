@@ -15,7 +15,18 @@ export function setupInput(callbacks) {
     let touchstartY = 0
     let minSwipeDist = 15
 
-    window.addEventListener('keydown', ({ key }) => {
+    window.addEventListener('keydown', (e) => {
+        const { key } = e;
+
+        if (
+            key === 'ArrowUp' ||
+            key === 'ArrowDown' ||
+            key === 'ArrowLeft' ||
+            key === 'ArrowRight' ||
+            key === ' '
+        ) {
+            e.preventDefault();
+        }
         switch (key) {
             case 'ArrowUp':
                 keys.w.pressed = true

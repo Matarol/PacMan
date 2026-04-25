@@ -3,7 +3,9 @@ import { scareGhosts } from "./ghostController.js"
 import { shrunkenVillain } from "./villainController.js"
 import { playSound } from "./audioManager.js"
 
-export function updateItems({player, pellets, powerUps, ghosts, villains, scoreEl, returnToMainMap, damagePlayer, gameState}) {  
+export function updateItems(world) {
+    const { player, pellets, powerUps, ghosts, villains, returnToMainMap, damagePlayer, gameState } = world;
+    const scoreEl = document.getElementById('scoreEl')
 
     // Spelare krockar med powerUps
     for (let i = powerUps.length - 1; i >= 0; i-- ) {

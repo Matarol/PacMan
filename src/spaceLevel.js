@@ -4,12 +4,23 @@ import { spaceLayout, buildSpaceMap } from "./spaceMap.js";
 import { gameState, GAME_MODES } from "./gameState.js";
 import { startExitPortalLoop } from "./portalManager.js";
 
+export const spaceConfig = {
+    levelName: 'space',
+    targetMode: 'SPACE',
+    useRestore: false, // Rymdbanan är en bonusbana, så vi vill inte återställa den från tidigare nivåer
+    saveCurrent: true, // Current är ju klassiska banan, så vi vill spara den när vi byter till rymdbanan så att vi kan återställa den när vi kommer tillbaka
+    initLevel: initSpaceLevel    
+}
+
 
 /**
  * Allt som rör initiering av rymdbanan samlas här
  */
+// export function initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUps, ghosts, keys })
 
-export function initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUps, ghosts, keys }) {
+export function initSpaceLevel(world) {
+
+    const { keys, canvas, c, player, boundaries, pellets, powerUps, ghosts, villains } = world
 
     //Nollställ tangenter
     keys.w.pressed = false;
@@ -51,6 +62,8 @@ export function initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUp
         },
         velocity: { x: 0, y: 0}
     })];
+
+    world.villains.push( ...newVillains);
 
     startExitPortalLoop(player, pellets)
 

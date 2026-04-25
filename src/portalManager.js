@@ -1,5 +1,8 @@
 import { gameState } from "./gameState.js";
 import { circleCollidesWithRectangle } from "./collision.js";
+import { classicConfig } from "./classicLevel.js";
+import { spaceConfig } from "./spaceLevel.js";
+import { changeLevel } from "./levelManager.js";
 
 export const portalState = {
     portalBoundary: null,
@@ -70,39 +73,15 @@ export function checkPortalCollision(player, boundaries) {
     return null;
 }
 
-export function handlePortalEntry(config) {
-    const { 
-        player, ghosts, pellets, powerUps, keys,canvas, c, initSpaceLevel, gameState, boundaries 
-    } = config;
+export function handlePortalEntry(world) {
 
+    // Markera att spelaren har besökt bonusbanan så att vi inte triggar portaler igen
     gameState.hasVisitedExtraLevel = true;
 
-    const lastMainPosition = { x: player.position.x, y: player.position.y };
-    const lastGhostPositions = ghosts.map(ghost => ({
-        x: ghost.position.x, 
-        y: ghost.position.y,
-        velocity: { x: ghost.velocity.x, y: ghost.velocity.y },
-        color: ghost.color
-    }));
-    const lastPelletState = pellets.map(p => ({
-        x: p.position.x, 
-        y: p.position.y, 
-        isDangerous: p.isDangerous
-    }));
+    // Byt till rymdbanan
+    changeLevel(spaceConfig, world);
 
-    boundaries.length = 0;
-    pellets.length = 0;
-    powerUps.length = 0;
-    ghosts.length = 0;
-
-    const villains = initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUps, ghosts, keys });
-
-    return {
-        lastMainPosition,
-        lastGhostPositions,
-        lastPelletState,
-        villains
-    };
+    return true;
 }
 
 // Funktion som öppnar portal i rymdbanan
@@ -132,5 +111,4 @@ export function startExitPortalLoop(player, pellets) {
             portalState.exitPortalInterval = null
         }
     }, Math.random() * 7000 + 8000);
-
 }
