@@ -1,4 +1,6 @@
-﻿export function renderLevel({ c, canvas, player, ghosts, villains, pellets, powerUps, boundaries, activeEffects }) {
+﻿export function renderLevel(world) {
+
+    const { c, canvas, player, ghosts, villains, pellets, powerUps, boundaries, activeEffects } = world;
 
     if (!player) return
     

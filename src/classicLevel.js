@@ -1,5 +1,6 @@
 import { buildClassicMap } from "./classicMap.js"
 import { Player } from "./player.js"
+import { Ghost } from "./ghost.js"
 import { Boundary } from "./boundary.js"
 import { Pellet } from "./items.js"
 import { Villain } from "./villain.js"
@@ -14,18 +15,59 @@ export const classicConfig = {
     initLevel: initClassicLevel    
 }
 
-export function initClassicLevel({ player, boundaries, pellets, powerUps, ghosts, keys, animate }) {
-    boundaries.length = 0
-    if (pellets) pellets.length = 0
-    powerUps.length = 0
-    ghosts.length = 0
-
+export function initClassicLevel(world) {
+    const { player, boundaries, pellets, powerUps, ghosts, winCount } = world
+   
+    
     buildClassicMap({ boundaries, pellets, powerUps })
 
     // Skapa spelaren
     if (player) {
-        player.position.x = 60
-        player.position.y = 60
+        player.position.x = Boundary.width + Boundary.width / 2;
+        player.position.y = Boundary.height + Boundary.height / 2;
+        player.velocity.x = 0;
+        player.velocity.y = 0;
     }
+
+    if (ghosts.length === 0) {
+        ghosts.push(new Ghost({
+                    position: {
+                        x: 6 * Boundary.width + Boundary.width / 2,
+                        y: Boundary.height + Boundary.height / 2
+                    },
+                    velocity: {
+                        x: Ghost.speed,
+                        y: 0
+                    }
+                }),
+        
+                new Ghost({
+                    position: {
+                        x: 6 * Boundary.width + Boundary.width / 2,
+                        y: 3 * Boundary.height + Boundary.height / 2
+                    },
+                    velocity: {
+                        x: Ghost.speed,
+                        y: 0
+                    },
+                    color: 'red'
+                }))
+        
+                if (winCount > 1) {
+                ghosts.push(
+                    new Ghost({
+                    position: {
+                        x: 6 * Boundary.width + Boundary.width / 2,
+                        y: 5 * Boundary.height + Boundary.height / 2
+                    },
+                    velocity: {
+                        x: Ghost.speed,
+                        y: 0
+                    },
+                    color: 'pink'
+                })    
+                )
+            }
+        }   
 
 }

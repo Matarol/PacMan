@@ -36,7 +36,9 @@ function getBestDirection(ghost, choices, targetPos) {
     return bestDir
 }
 
-export function updateGhosts(ghosts, boundaries, player, deltaTime) {
+export function updateGhosts(world, deltaTime) {
+    if (!world || !Array.isArray(world.ghosts)) return;
+    const { ghosts, boundaries, player } = world
     ghosts.forEach(ghost => {
         const steps = 4;
         const stepDelta = deltaTime / steps;

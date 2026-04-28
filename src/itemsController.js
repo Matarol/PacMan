@@ -2,10 +2,13 @@ import { circleCollidesWithCircle } from "./collision.js"
 import { scareGhosts } from "./ghostController.js"
 import { shrunkenVillain } from "./villainController.js"
 import { playSound } from "./audioManager.js"
+import { changeLevel } from "./levelManager.js";
+import { classicConfig } from "./classicLevel.js";
 
-export function updateItems(world) {
-    const { player, pellets, powerUps, ghosts, villains, returnToMainMap, damagePlayer, gameState } = world;
-    const scoreEl = document.getElementById('scoreEl')
+export function updateItems(world, callbacks) {
+    if (!world || !world.player) return;
+    const { player, pellets, powerUps, ghosts, villains, gameState, scoreEl } = world;
+    const { damagePlayer, returnToMainMap } = callbacks;
 
     // Spelare krockar med powerUps
     for (let i = powerUps.length - 1; i >= 0; i-- ) {
@@ -36,7 +39,7 @@ export function updateItems(world) {
         if (circleCollidesWithCircle(pellet, player)) {
             if (pellet.isPortal) {
                 playSound('portal')
-                returnToMainMap()
+                changeLevel(classicConfig, world)
                 return { result: 'level_changed' }
             }
 

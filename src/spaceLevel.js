@@ -39,6 +39,7 @@ export function initSpaceLevel(world) {
     pellets.length = 0;
     powerUps.length = 0;
     ghosts.length = 0;
+    if (villains) villains.length = 0;
 
     //Bygg banan
     buildSpaceMap({c, pellets, boundaries, powerUps});
@@ -54,16 +55,14 @@ export function initSpaceLevel(world) {
     player.velocity.x = 0;
     player.velocity.y = 0;
 
-    //Returnerar de nya skurkarna så game.js kan uppdatera sin lista
-    const newVillains = [new Villain({
+    //Initierar en villain och adderar till listan
+    world.villains.push(new Villain({
         position: {
-            x: villainStart.x * Boundary.width + Boundary.width /2,
-            y: villainStart.y * Boundary.height + Boundary.height /2
+            x: villainStart.x * Boundary.width + Boundary.width / 2,
+            y: villainStart.y * Boundary.height + Boundary.height / 2
         },
-        velocity: { x: 0, y: 0}
-    })];
-
-    world.villains.push( ...newVillains);
+        velocity: { x: 0, y: 0 }
+    }));
 
     startExitPortalLoop(player, pellets)
 
@@ -71,8 +70,6 @@ export function initSpaceLevel(world) {
         gameState.gameRunning = true;
         gameState.justResumed = true;
     }, 1000);
-
-    return newVillains;
 }
 
 //Hjälpfunktion för att hitta startposition for PacMan och SkurkPacMan i mapExtra1-banan

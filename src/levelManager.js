@@ -28,6 +28,27 @@ function snapToGrid(position) {
     };
 }
 
+// Hjälpfunktion för nedräkning vid banbyte
+function runLevelTransition(world, targetMode) {
+    const { gameState } = world;
+
+    gameState.mode = 'COUNTDOWN';
+    gameState.countdownValue = 3;
+    gameState.gameRunning = false;
+
+    const timer = setInterval(() => {
+        gameState.countdownValue--;
+
+        if (gameState.countdownValue <= 0) {
+            clearInterval(timer);
+            gameState.mode = targetMode;
+            gameState.gameRunning = true;
+            gameState.justResumed = true;
+            world.lastTime = performance.now();
+        }
+    }, 1000)
+}
+
 // Generisk funktion för banbyten
 export function changeLevel(config, world) {
 
@@ -47,7 +68,9 @@ export function changeLevel(config, world) {
 
     // Uppdatera gameState
     world.gameState.currentLevel = config.levelName;
-    world.gameState.mode = config.targetMode;
+
+    runLevelTransition(world, config.targetMode);
+    // world.gameState.mode = config.targetMode;
 }
 
 /**
@@ -97,6 +120,7 @@ function restoreLevel(config, world) {
 
     // Återställ spöken
     if (savedPositions.ghosts.length > 0) {
+        ghosts.length = 0;
         savedPositions.ghosts.forEach(data => {
             ghosts.push(new Ghost({
                 position: { x: data.x, y: data.y },

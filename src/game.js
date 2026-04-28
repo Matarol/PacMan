@@ -1,4 +1,11 @@
-﻿import { showMenu } from './menu.js'
+﻿import { GameEngine } from './core/gameEngine.js'
+import { renderCountdown, renderFrame } from './systems/renderSystem.js'
+import { updateEffects } from './systems/effectSystem.js'
+import { updateCollisions } from './systems/collisionSystem.js'
+import { updateItemSystem } from './systems/itemSystem.js'
+import { updatePortals } from './systems/portalSystem.js'
+import { updateMovement } from './systems/movementSystem.js'
+import { showMenu } from './menu.js'
 import { Player } from './player.js'
 import { Ghost } from './ghost.js'
 import { Boundary } from './boundary.js'
@@ -25,7 +32,6 @@ let boundaries = []
 let ghosts = []
 let player
 let villains = []
-
 let winCount = 0
 let activeEffects = [] // Array för att hålla reda på texterna
 let lastTime = performance.now()
@@ -51,13 +57,14 @@ const world = {
     get villains() { return villains },
     get player() { return player },
     set player(value) { player = value },
+    get activeEffects() { return activeEffects },
+    get scoreEl() { return document.getElementById('scoreEl') },
+    get winCount() { return winCount },
     gameState: gameState,
     keys: keys,
     c: c,
     canvas: canvas
 }
-
-
 
 function startCountdown(nextMode) {
     gameState.mode = GAME_MODES.COUNTDOWN
@@ -136,145 +143,48 @@ function handleGameOver(isWin) {
 }
 
 async function init() {
-    // cancelAnimationFrame(gameState.animationId)
 
     clearPortalTimers()
-
     canvas.classList.remove('space-background')
 
-    //Tömmer alla globala arrays
+    //Återställ gameState
+    gameState.currentLevel = 'CLASSIC'
+    gameState.hasVisitedExtraLevel = false
+    gameState.score = 0
+    gameState.health = 100
+    updateUI(gameState)
+
+    //Rensa och förbered listor
     pellets.length = 0;
     powerUps.length = 0;
     boundaries.length = 0;
     ghosts.length = 0;
-    if (villains) villains.length = 0;    
+    if (villains) villains.length = 0;
 
-    gameState.currentLevel = 'CLASSIC'
-    gameState.hasVisitedExtraLevel = false
+    //Skapa SPELAREN OCH SPÖKENA HÄR (Innan initClassicLevel)
+    player = new Player({
+        position: { x: Boundary.width * 1.5, y: Boundary.height * 1.5 },
+        velocity: { x: 0, y: 0 }
+    })
 
-    initClassicLevel({ pellets, powerUps, boundaries, ghosts, player })    
-
-    startCountdown(GAME_MODES.CLASSIC)
-    gameState.score = 0
-    updateUI(gameState)
+    initClassicLevel(world)    
 
     setTimeout(() => triggerPortalTimer(boundaries), 10000);
-
-    ghosts = [
-        new Ghost({
-            position: {
-                x: 6 * Boundary.width + Boundary.width / 2,
-                y: Boundary.height + Boundary.height / 2
-            },
-            velocity: {
-                x: Ghost.speed,
-                y: 0
-            }
-        }),
-
-        new Ghost({
-            position: {
-                x: 6 * Boundary.width + Boundary.width / 2,
-                y: 3 * Boundary.height + Boundary.height / 2
-            },
-            velocity: {
-                x: Ghost.speed,
-                y: 0
-            },
-            color: 'red'
-        })        
-    ]
-
-    if (winCount > 1) {
-        ghosts.push(
-            new Ghost({
-            position: {
-                x: 6 * Boundary.width + Boundary.width / 2,
-                y: 5 * Boundary.height + Boundary.height / 2
-            },
-            velocity: {
-                x: Ghost.speed,
-                y: 0
-            },
-            color: 'pink'
-        })    
-        )
-    }
-
-    player = new Player({
-        position: {
-            x: Boundary.width + Boundary.width / 2,
-            y: Boundary.height + Boundary.height / 2
-        },
-        velocity: {
-            x: 0,
-            y: 0
-        }
-    })
+    lastTime = performance.now()
+    startCountdown(GAME_MODES.CLASSIC)
 }
 
-async function animate(timestamp = performance.now()) {
-    gameState.animationId = requestAnimationFrame(animate)
+async function updateFrame(deltaTime) {
     
     if (!player) return
 
-    let deltaTime = (timestamp - lastTime) / 1000; // Tid i sekunder sedan senaste frame
-    lastTime = timestamp;
-
-    activeEffects.forEach((effect, index) => {
-        if (effect.opacity <= 0) {
-            activeEffects.splice(index, 1)
-        } else {
-            effect.update()
-        }
-    })
-
     if (gameState.mode === GAME_MODES.COUNTDOWN) {
-        renderLevel({
-            c,
-            canvas,
-            player,
-            ghosts,
-            villains,
-            pellets,
-            powerUps,
-            boundaries,
-            activeEffects
-        })
-
-        c.save()
-        c.font = '56px Arial'
-        c.textAlign = 'center'
-        c.textBaseline = 'middle'
-        c.fillStyle = 'white'
-
-        const centerX = logicalWidth / 2;
-        const centerY = logicalHeight / 2;
-
-        c.fillText(
-            gameState.countdownValue > 0
-                ? gameState.countdownValue
-                : 'GO!',
-            centerX,
-            centerY
-        )
-        c.restore()
-
         return
     }
 
+    updateEffects(world)
+    
     if (!gameState.gameRunning) {
-        renderLevel({
-            c,
-            canvas,
-            player,
-            ghosts,
-            villains,
-            pellets,
-            powerUps,
-            boundaries,
-            activeEffects
-        })
         return
     }
 
@@ -282,72 +192,50 @@ async function animate(timestamp = performance.now()) {
         deltaTime = 1 / 60; 
     }
 
-    // 1. Rendera effekter (poängtexter etc)
-    activeEffects.forEach((effect, index) => {
-        if (effect.opacity <= 0) {
-            activeEffects.splice(index, 1)
-        } else {
-            effect.update()
-        }
-    })
-
     // 2. KÖR LOGIK BEROENDE AV FYSIKMODE
-    switch (gameState.mode) {
-        case GAME_MODES.CLASSIC: {
-            const result = updateClassicMode({
-                player,
-                ghosts,
-                currentDirection,
-                nextDirection,
-                boundaries,
-                deltaTime
-            })
-
-            currentDirection = result.currentDirection
-            nextDirection = result.nextDirection
-            break
+    const movementState = await updateMovement(
+        world,
+        gameState,
+        deltaTime,
+        {
+            currentDirection,
+            nextDirection
+        },
+        {
+            returnToMainMap,
+            handleGameOver,
+            showMenu
         }
+    );
 
-        case GAME_MODES.SPACE:
-            await updateSpaceMode({
-                player,
-                villains,
-                boundaries,
-                keys,
-                gameState,
-                pellets,
-                scoreEl: document.getElementById('scoreEl'),
-                activeEffects,
-                showMenu,
-                returnToMainMap,
-                handleGameOver,
-                deltaTime
-            })
-            break
+    currentDirection = movementState.currentDirection;
+    nextDirection = movementState.nextDirection;
 
-        case GAME_MODES.PAUSED:
-        case GAME_MODES.MENU:
-        case GAME_MODES.GAME_OVER:
-            return
+    if (movementState.shouldInterruptFrame) {
+        return;
     }
 
     // 3. KOLLISIONER & ITEMS (gemensamt för båda lägena)
-    const collisionResult = resolvePlayerGhostCollision(player, ghosts)
-    const itemResult = updateItems({ player, pellets: world.pellets, powerUps, ghosts, villains, scoreEl: document.getElementById('scoreEl'), returnToMainMap, damagePlayer, gameState })
+    const collisionState = updateCollisions(world)
+    const itemState = updateItemSystem(world, { returnToMainMap, damagePlayer })
+    // const itemResult = updateItems(world, { returnToMainMap, damagePlayer })
+    
 
-    if (itemResult?.result === 'player_damaged') updateUI(gameState)
+    // if (itemResult?.result === 'player_damaged') updateUI(gameState)
+    if (collisionState.tookDamage || itemState.shouldUpdateUI) {
+        updateUI(gameState);
+    }
 
-    if (collisionResult.result === 'player_dead' || gameState.health <= 0) {
+    if (collisionState.shouldGameOver) {
         playSound('lose')
         handleGameOver(false)
         return
     }
 
-    console.log("Når vi hit? Level:", gameState.currentLevel, "Mode:", gameState.mode, "Resumed:", gameState.justResumed);
-
     // Om vi precis stängt en meny, vänta en frame med att kolla vinst
     if (gameState.justResumed) {
         gameState.justResumed = false;
+        renderLevel(world)
         return; 
     }
 
@@ -357,16 +245,11 @@ async function animate(timestamp = performance.now()) {
     }
 
     // 4. RITA BANAN OCH SKÖTA PORTALER
-    const collidePortal = checkPortalCollision(player, boundaries);
+    const portalState = updatePortals(world);
 
-    if (collidePortal) {        
-
-        handlePortalEntry(world);
-
-        return; 
-        
+    if (portalState.shouldInteruptFrame) {
+        return;
     }
-    
 
     // 🔥 NYTT: UPDATE ENTITIES
     // player.update(deltaTime)
@@ -376,35 +259,35 @@ async function animate(timestamp = performance.now()) {
         console.error("PLAYER BROKEN", player)
     }
 
-    if (villains) {
-        villains.forEach((v, i) => {
+    if (world.villains) {
+        world.villains.forEach((v, i) => {
             if (!v || !v.velocity) {
                 console.error("BAD VILLAIN", i, v)
             }
         })
     }
 
-        renderLevel({
-        c,
-        canvas,
-        player,
-        ghosts,
-        villains,
-        pellets,
-        powerUps,
-        boundaries,
-        activeEffects
-    });
+} //end of updateFrame
 
-} //end of animate
+const engine = new GameEngine({
+    canvas,
+    c,
+    world,
+    gameState,
+    systems: {
+        init,
+        update: updateFrame,
+        render: () => renderFrame(world)
+    }
+});
 
 window.onload = async () => {
     const dimensions = await drawStaticMap({ canvas, c, classicLayout, Boundary, initClassicLevel })
     logicalWidth = dimensions.logicalWidth
     logicalHeight = dimensions.logicalHeight
     highScoreEl.innerText = localStorage.getItem('pacman-highscore') || 0
-    showMenu('START', { startGame: init })
-    animate(performance.now())
+    showMenu('START', { startGame: () => engine.start() })
+    // updateFrame(performance.now())
 }
 
 setupInput({
