@@ -54,16 +54,8 @@ export function checkWin(world) {
     // Vi vill bara vinna om de klassiska, icke-farliga pelletsen är slut.
     const normalPelletsLeft = pellets.filter(p => !p.isDangerous);
 
-    console.log("Normala pellets kvar: ", normalPelletsLeft.length)
-
     return normalPelletsLeft === 0;
 }
-
-// export function checkWin(pellets) {
-//     pellets.filter(p => !p.isDangerous && p.constructor.name === 'Pellet');
-
-//     return !pellets.some(p => !p.isDangerous)
-// }
 
 export function damagePlayer(amount, gameState) {
     const now = Date.now()

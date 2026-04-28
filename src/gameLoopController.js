@@ -7,11 +7,12 @@ import { updateUI } from "./uiManager.js";
 import { handleVillainEaten } from "./villainController.js";
 import { playSound } from "./audioManager.js";
 
-export async function updateSpaceMode({ player, villains, boundaries, keys, gameState, pellets, scoreEl, activeEffects, showMenu, returnToMainMap, handleGameOver, deltaTime }) {
+export async function updateSpaceMode(world, deltaTime, returnToMainMap, handleGameOver, showMenu) {
+    const { player, villains = [], boundaries, keys, gameState, pellets, scoreEl, activeEffects } = world
 
     if (!player || !player.velocity) return
 
-    villains = villains || []
+    // villains = villains || []
 
     handleSpaceMovement(player, keys, boundaries, deltaTime);
 
@@ -49,7 +50,7 @@ export async function updateSpaceMode({ player, villains, boundaries, keys, game
             if (v.miniature) {
                 const savedVillain = { ...v };
                 villains.splice(i, 1);
-                await handleVillainEaten({ eatenVillain: savedVillain, pellets, scoreEl, activeEffects, showMenu, gameState, returnToMainMap });
+                await handleVillainEaten({ eatenVillain: savedVillain, world, showMenu });
                 return;
             } else {
                 damagePlayer(15, gameState);                
@@ -65,11 +66,12 @@ export async function updateSpaceMode({ player, villains, boundaries, keys, game
 
 }
 
-export function updateClassicMode({ player, ghosts, currentDirection, nextDirection, boundaries, deltaTime }) {
+export function updateClassicMode(world, currentDirection, nextDirection, deltaTime) {
+    const { player, ghosts, boundaries } = world;
 
     const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries, deltaTime);
 
-    updateGhosts(ghosts, boundaries, player, deltaTime);
+    updateGhosts(world, deltaTime);
 
     return result;
 }

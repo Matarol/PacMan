@@ -3,6 +3,8 @@ import { circleCollidesWithRectangle } from "./collision.js";
 import { gameState } from "./gameState.js";
 import { FloatingText } from "./floatingText.js";
 import { playSound } from "./audioManager.js";
+import { changeLevel } from "./levelManager.js";
+import { classicConfig } from "./classicLevel.js";
 
 export function updateVillain(villain, player, boundaries) {
     if (!villain || !player) return
@@ -114,7 +116,8 @@ function drainPelletsWithPoints(pellets, activeEffects) {
     })
 }
 
-export async function handleVillainEaten({eatenVillain, pellets, score, scoreEl, activeEffects, gameController, showMenu, gameState, returnToMainMap}) {
+export async function handleVillainEaten({eatenVillain, world, showMenu }) {
+    const { gameState, scoreEl, activeEffects, pellets } = world
     // 1. Stoppa spelet
     gameState.gameRunning = false;
 
@@ -140,7 +143,7 @@ export async function handleVillainEaten({eatenVillain, pellets, score, scoreEl,
     showMenu('BONUSLVLCOMPLETE', {
         resumeGame: () => {
             gameState.hasVisitedExtraLevel = true
-            returnToMainMap()
+            changeLevel(classicConfig, world)
         },
         resetToMain: () => location.reload()
     }, {
