@@ -6,6 +6,7 @@
         this.color = color || (isDangerous ? 'red' : 'white')
         this.isPortal = false
         this.portalTimer = null
+        this.type = 'pellet'
     }
 
     draw(c) {
@@ -56,6 +57,7 @@ export class PowerUp {
         this.position = position
         this.radius = 8
         this.color = color || 'white'
+        this.type = 'powerUp'
     }
 
     draw(c) {

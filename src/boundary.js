@@ -15,7 +15,8 @@ export class Boundary {
         this.height = 40
         this.originalImage = image
         this.image = image
-        this.type = type
+        this.type = 'boundary'
+        this.boundaryType = type
         this.isPortal = false
         this.portalFrame = 0
         this.asteroidFrame = 0
@@ -43,7 +44,7 @@ export class Boundary {
             }
 
             // ☄️ Logik för asteroider (Rymdbanan)
-            if (this.type === 'asteroid') {
+            if (this.boundaryType === 'asteroid') {
                 this.asteroidFrame += this.animationSpeed
                 const frameIndex = Math.floor(this.asteroidFrame) % Boundary.totalFrames
                 const row = Math.floor(frameIndex / Boundary.columns)

@@ -50,6 +50,8 @@ let nextDirection = null
 
 // Samlar alla viktiga variabler i ett globalt "world"-objekt för enklare åtkomst i andra moduler
 const world = {
+    entities: [],
+    gameState: gameState,
     get pellets() { return pellets },
     get powerUps() { return powerUps },
     get boundaries() { return boundaries },
@@ -60,7 +62,6 @@ const world = {
     get activeEffects() { return activeEffects },
     get scoreEl() { return document.getElementById('scoreEl') },
     get winCount() { return winCount },
-    gameState: gameState,
     keys: keys,
     c: c,
     canvas: canvas
@@ -161,13 +162,24 @@ async function init() {
     ghosts.length = 0;
     if (villains) villains.length = 0;
 
+    world.entities.length = 0; // Rensa den generella entities-arrayen också
+
     //Skapa SPELAREN OCH SPÖKENA HÄR (Innan initClassicLevel)
     player = new Player({
         position: { x: Boundary.width * 1.5, y: Boundary.height * 1.5 },
         velocity: { x: 0, y: 0 }
     })
 
-    initClassicLevel(world)    
+    world.player = player
+
+    initClassicLevel(world)
+
+    world.entities.push(player)
+    world.entities.push(...ghosts)
+    world.entities.push(...boundaries)
+    world.entities.push(...powerUps)
+    world.entities.push(...pellets)
+    world.entities.push(...villains)
 
     setTimeout(() => triggerPortalTimer(boundaries), 10000);
     lastTime = performance.now()
@@ -218,10 +230,7 @@ async function updateFrame(deltaTime) {
     // 3. KOLLISIONER & ITEMS (gemensamt för båda lägena)
     const collisionState = updateCollisions(world)
     const itemState = updateItemSystem(world, { returnToMainMap, damagePlayer })
-    // const itemResult = updateItems(world, { returnToMainMap, damagePlayer })
     
-
-    // if (itemResult?.result === 'player_damaged') updateUI(gameState)
     if (collisionState.tookDamage || itemState.shouldUpdateUI) {
         updateUI(gameState);
     }
@@ -252,7 +261,6 @@ async function updateFrame(deltaTime) {
     }
 
     // 🔥 NYTT: UPDATE ENTITIES
-    // player.update(deltaTime)
     player.update(deltaTime)
 
     if (!player || !player.velocity) {

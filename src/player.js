@@ -8,6 +8,7 @@
         this.rotation = 0
         this.eyesOffsetX = 3
         this.eyesOffsetY = -6
+        this.type = 'player'
     }
 
     draw(c) {

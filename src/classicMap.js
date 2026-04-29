@@ -75,7 +75,7 @@ export function buildClassicMap({pellets, powerUps, boundaries}) {
                         position: position,
                         image: createImage('../assets/img/block.png')
                     })
-                    boundary.type = 'block'
+                    boundary.boundaryType = 'block'
                     boundaries.push(boundary)
                 break
                 case '[': boundaries.push(new Boundary({

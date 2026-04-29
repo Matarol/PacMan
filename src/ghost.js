@@ -18,6 +18,7 @@
         else if (velocity.y < 0) this.lastDirection = 'up'
         else this.lastDirection = ''
         this.cameFrom = ''
+        this.type = 'ghost'
     }
 
     draw(c) {

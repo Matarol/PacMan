@@ -6,6 +6,7 @@ export const levelState = {
         player: null,
         ghosts: [],
         pellets: [],
+        powerUps: [],
         villains: []
     }
 };
@@ -17,6 +18,8 @@ function clearCurrentLevel(world) {
     world.boundaries.length = 0;
     world.ghosts.length = 0;
     if (world.villains) world.villains.length = 0;
+
+    world.entities.length = 0; // Rensa den generella entities-arrayen också
 }
 
 // Hjälpfunktion som hittar grid-position för character som återkommer till klassiska banan
@@ -53,7 +56,7 @@ function runLevelTransition(world, targetMode) {
 export function changeLevel(config, world) {
 
     if (config.saveCurrent) {
-        saveCurrentLevelState(world.player, world.ghosts, world.pellets, world.villains);
+        saveCurrentLevelState(world.player, world.ghosts, world.pellets, world.powerUps, world.villains);
     }
 
     // Rensa banan innan vi laddar nästa
@@ -76,7 +79,7 @@ export function changeLevel(config, world) {
 /**
  * Sparar ner tillståndet från den aktuella nivån innan vi byter
  */
-export function saveCurrentLevelState(player, ghosts, pellets, villains = []) {
+export function saveCurrentLevelState(player, ghosts, pellets, powerUps, villains = []) {
     levelState.savedPositions.player = { ...player.position };    
     levelState.savedPositions.ghosts = ghosts.map(g => ({
         x: g.position.x,
@@ -91,6 +94,11 @@ export function saveCurrentLevelState(player, ghosts, pellets, villains = []) {
         isDangerous: p.isDangerous
     }));
 
+    levelState.savedPositions.powerUps = powerUps.map(p => ({
+        x: p.position.x,
+        y: p.position.y
+    }));
+
     levelState.savedPositions.villains = [...villains];
 }
 
@@ -100,8 +108,10 @@ export function saveCurrentLevelState(player, ghosts, pellets, villains = []) {
 // levelManager.js
 
 function restoreLevel(config, world) {
-    const { player, ghosts, pellets, villains, c, gameState } = world;
+    const { player, ghosts, pellets, powerUps, villains, c, gameState } = world;
     const { savedPositions } = levelState;
+
+    world.entities.length = 0; // Rensa den generella entities-arrayen också
 
     config.initLevel(world); // För att bygga upp banan och placera ut saker på rätt ställen
 
@@ -116,6 +126,17 @@ function restoreLevel(config, world) {
                 isDangerous: data.isDangerous
             }));
         });    
+    }
+
+    // Återställ power-ups
+    if (savedPositions.powerUps.length > 0) {
+        powerUps.length = 0;
+        savedPositions.powerUps.forEach(data => {
+            powerUps.push(new PowerUp({
+                position: { x: data.x, y: data.y },
+                context: c
+            }));
+        });
     }
 
     // Återställ spöken
@@ -142,6 +163,13 @@ function restoreLevel(config, world) {
         player.position.x = snappedPosition.x;
         player.position.y = snappedPosition.y;
     }
+
+    world.entities.push(player);
+    world.entities.push(...world.boundaries);
+    world.entities.push(...world.pellets);
+    world.entities.push(...world.powerUps);
+    world.entities.push(...world.ghosts);
+    if (world.villains) world.entities.push(...world.villains);
 
     // 1. Nollställ hastigheten helt (så han inte "glider" in i en vägg direkt)
     player.velocity.x = 0;

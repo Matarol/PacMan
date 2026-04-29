@@ -3,7 +3,8 @@
 export function updateCollisions(world) {
     const result = resolvePlayerGhostCollision(
         world.player,
-        world.ghosts
+        world.ghosts,
+        world
     );
 
     const tookDamage = result?.result === 'player_damaged';

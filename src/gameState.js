@@ -1,5 +1,6 @@
 import { playSound } from "./audioManager.js"
 import { circleCollidesWithCircle } from "./collision.js"
+import { removeEntity } from "./itemsController.js"
 
 export const GAME_MODES = {
     MENU: 'MENU',
@@ -26,7 +27,7 @@ export const gameState = {
     lastDamageTime: 0
 }
 
-export function resolvePlayerGhostCollision(player, ghosts) {
+export function resolvePlayerGhostCollision(player, ghosts, world) {
 
     for (let i = ghosts.length -1; i >= 0; i--) {
          const ghost = ghosts[i]
@@ -35,6 +36,7 @@ export function resolvePlayerGhostCollision(player, ghosts) {
             if (ghost.scared) {
                 playSound('eat-ghost')
                 ghosts.splice(i, 1)
+                removeEntity(ghost, world)
                 return { result: 'ghost_eaten' }
             } else {
                 return { result: 'player_dead' }
