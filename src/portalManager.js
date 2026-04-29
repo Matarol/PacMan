@@ -16,7 +16,7 @@ export function openRandomPortal(boundaries) {
         portalState.portalBoundary.isPortal = false;
     }
 
-    const candidates = boundaries.filter(b => b.type === 'block');
+    const candidates = boundaries.filter(b => b.boundaryType === 'block');
 
     if (candidates.length > 0) {
         const randomIndex = Math.floor(Math.random() * candidates.length);

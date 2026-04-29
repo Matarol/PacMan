@@ -6,6 +6,7 @@ import { damagePlayer } from "./gameState.js";
 import { updateUI } from "./uiManager.js";
 import { handleVillainEaten } from "./villainController.js";
 import { playSound } from "./audioManager.js";
+import { removeEntity } from "./itemsController.js";
 
 export async function updateSpaceMode(world, deltaTime, returnToMainMap, handleGameOver, showMenu) {
     const { player, villains = [], boundaries, keys, gameState, pellets, scoreEl, activeEffects } = world
@@ -17,7 +18,7 @@ export async function updateSpaceMode(world, deltaTime, returnToMainMap, handleG
     handleSpaceMovement(player, keys, boundaries, deltaTime);
 
     boundaries.forEach(boundary => {
-        if (boundary.type === 'asteroid') {
+        if (boundary.boundaryType === 'asteroid') {
             const asteroid = {
                 position: {
                     x: boundary.position.x + boundary.width / 2,
@@ -50,6 +51,7 @@ export async function updateSpaceMode(world, deltaTime, returnToMainMap, handleG
             if (v.miniature) {
                 const savedVillain = { ...v };
                 villains.splice(i, 1);
+                removeEntity(v, world)
                 await handleVillainEaten({ eatenVillain: savedVillain, world, showMenu });
                 return;
             } else {

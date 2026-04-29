@@ -20,7 +20,7 @@ export const spaceConfig = {
 
 export function initSpaceLevel(world) {
 
-    const { keys, canvas, c, player, boundaries, pellets, powerUps, ghosts, villains } = world
+    const { keys, canvas, c, player, boundaries, pellets, powerUps, ghosts, villains, entities } = world;
 
     //Nollställ tangenter
     keys.w.pressed = false;
@@ -38,11 +38,18 @@ export function initSpaceLevel(world) {
     boundaries.length = 0;
     pellets.length = 0;
     powerUps.length = 0;
+    entities.length = 0; // Rensa den generella entities-arrayen också
     ghosts.length = 0;
     if (villains) villains.length = 0;
 
+    world.entities.length = 0; // Rensa den generella entities-arrayen också
+
     //Bygg banan
     buildSpaceMap({c, pellets, boundaries, powerUps});
+
+    world.entities.push(...boundaries);
+    world.entities.push(...pellets);
+    world.entities.push(...powerUps);
 
     //Placera spelaren
     player.physicsMode = 'SPACE';
@@ -55,6 +62,8 @@ export function initSpaceLevel(world) {
     player.velocity.x = 0;
     player.velocity.y = 0;
 
+    world.entities.push(player)
+
     //Initierar en villain och adderar till listan
     world.villains.push(new Villain({
         position: {
@@ -63,6 +72,10 @@ export function initSpaceLevel(world) {
         },
         velocity: { x: 0, y: 0 }
     }));
+
+    world.entities.push(...world.villains)
+
+
 
     startExitPortalLoop(player, pellets)
 

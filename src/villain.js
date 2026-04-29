@@ -9,6 +9,7 @@ export class Villain {
         this.eyesOffsetX = 3
         this.eyesOffsetY = -6
         this.miniature = false
+        this.type = 'villain'
     }
 
     draw(c) {
