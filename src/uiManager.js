@@ -29,12 +29,21 @@ export async function drawStaticMap({ canvas, c, classicLayout, Boundary, initCl
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.scale(dpr * scale, dpr * scale);
 
-    const tempBoundaries = [];
-    const tempPowerUps = [];
-    const tempPellets = [];
+    //För att rita upp statiska kartan behöver vi temporära listor som initieras av initClassicLevel
 
+    const previewWorld = {
+        entities: [],
+        boundaries: [],
+        powerUps: [],
+        ghosts: [],
+        player: null,
+    };
 
-    initClassicLevel({ pellets: tempPellets, powerUps: tempPowerUps, boundaries: tempBoundaries, ghosts: [] , player: null })
+    initClassicLevel(previewWorld);
+
+    const tempBoundaries = previewWorld.entities.filter(e => e.type === 'boundary');
+    const tempPowerUps = previewWorld.entities.filter(e => e.type === 'powerUp');
+    const tempPellets = previewWorld.entities.filter(e => e.type === 'pellet');
 
     const imagePromises = tempBoundaries.map(b => b.image).filter(img => img instanceof HTMLImageElement).map(img => img.decode().catch(() => {}))
 

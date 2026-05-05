@@ -5,6 +5,7 @@ import { FloatingText } from "./floatingText.js";
 import { playSound } from "./audioManager.js";
 import { changeLevel } from "./levelManager.js";
 import { classicConfig } from "./classicLevel.js";
+import { removeEntity } from "./itemsController.js";
 
 export function updateVillain(villain, player, boundaries) {
     if (!villain || !player) return
@@ -85,6 +86,7 @@ export function updateVillain(villain, player, boundaries) {
 
 //Funktion för att krympa skurken ifall en powerUp äts i extrabanan
 export function shrunkenVillain(villain) {
+    console.trace('shrunkenVillain called');
     if (!villain || !villain.velocity) return
     villain.miniature = true
 
@@ -94,11 +96,13 @@ export function shrunkenVillain(villain) {
     4000)
 }
 
-function drainPelletsWithPoints(pellets, activeEffects) {
+function drainPelletsWithPoints(world, activeEffects) {
+    const pellets = world.entities.filter(e => e.type === 'pellet');
     return new Promise((resolve) => {
         const drainInterval = setInterval(() => {
             if (pellets.length > 0) {
                 const p = pellets.pop()
+                removeEntity(p, world);
 
                 activeEffects.push(new FloatingText({
                     x: p.position.x,
@@ -117,7 +121,8 @@ function drainPelletsWithPoints(pellets, activeEffects) {
 }
 
 export async function handleVillainEaten({eatenVillain, world, showMenu }) {
-    const { gameState, scoreEl, activeEffects, pellets } = world
+    const { gameState, scoreEl, activeEffects } = world
+    const pellets = world.entities.filter(e => e.type === 'pellet');
     // 1. Stoppa spelet
     gameState.gameRunning = false;
 
@@ -138,7 +143,7 @@ export async function handleVillainEaten({eatenVillain, world, showMenu }) {
     playSound('win')
 
     // 4. "Sug in" pellets visuellt
-    await drainPelletsWithPoints(pellets, activeEffects)
+    await drainPelletsWithPoints(world, activeEffects)
 
     showMenu('BONUSLVLCOMPLETE', {
         resumeGame: () => {

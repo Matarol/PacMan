@@ -1,3 +1,4 @@
+import { addEntity } from "../src/utils/entityHelpers.js";
 import { Boundary } from "./boundary.js";
 import { Villain } from "./villain.js";
 import { spaceLayout, buildSpaceMap } from "./spaceMap.js";
@@ -16,11 +17,15 @@ export const spaceConfig = {
 /**
  * Allt som rör initiering av rymdbanan samlas här
  */
-// export function initSpaceLevel({ c, canvas, player, boundaries, pellets, powerUps, ghosts, keys })
 
 export function initSpaceLevel(world) {
+    const { keys, canvas } = world;
+    const player = world.entities.find(e => e.type === 'player');
 
-    const { keys, canvas, c, player, boundaries, pellets, powerUps, ghosts, villains, entities } = world;
+    if (!player) {
+        console.error("Player entity not found in world.entities during space level initialization.");
+        return;
+    }
 
     //Nollställ tangenter
     keys.w.pressed = false;
@@ -34,22 +39,11 @@ export function initSpaceLevel(world) {
     gameState.currentLevel = 'SPACE'
     gameState.gameRunning = false;
 
-    //Töm nuvarande listor
-    boundaries.length = 0;
-    pellets.length = 0;
-    powerUps.length = 0;
-    entities.length = 0; // Rensa den generella entities-arrayen också
-    ghosts.length = 0;
-    if (villains) villains.length = 0;
-
-    world.entities.length = 0; // Rensa den generella entities-arrayen också
+    //Töm nuvarande listor och entities så att vi kan bygga upp rymdnivån från scratch
+    world.entities.length = 0;
 
     //Bygg banan
-    buildSpaceMap({c, pellets, boundaries, powerUps});
-
-    world.entities.push(...boundaries);
-    world.entities.push(...pellets);
-    world.entities.push(...powerUps);
+    buildSpaceMap(world);
 
     //Placera spelaren
     player.physicsMode = 'SPACE';
@@ -62,22 +56,21 @@ export function initSpaceLevel(world) {
     player.velocity.x = 0;
     player.velocity.y = 0;
 
-    world.entities.push(player)
+    // Addera spelaren till entities så att den renderas och uppdateras
+    addEntity(world, player);
 
     //Initierar en villain och adderar till listan
-    world.villains.push(new Villain({
+    const villain = new Villain({
         position: {
             x: villainStart.x * Boundary.width + Boundary.width / 2,
             y: villainStart.y * Boundary.height + Boundary.height / 2
         },
         velocity: { x: 0, y: 0 }
-    }));
+    });
+    addEntity(world, villain);
 
-    world.entities.push(...world.villains)
-
-
-
-    startExitPortalLoop(player, pellets)
+    //Starta portal-loopen som slumpmässigt placerar ut en portal på kartan
+    startExitPortalLoop(world);
 
     setTimeout(() => {
         gameState.gameRunning = true;

@@ -1,4 +1,5 @@
 import { buildClassicMap } from "./classicMap.js"
+import { addEntity } from "./utils/entityHelpers.js"
 import { Player } from "./player.js"
 import { Ghost } from "./ghost.js"
 import { Boundary } from "./boundary.js"
@@ -16,10 +17,13 @@ export const classicConfig = {
 }
 
 export function initClassicLevel(world) {
-    const { player, boundaries, pellets, powerUps, ghosts, winCount } = world
+    const { player, winCount } = world
+    const boundaries = world.entities.filter(e => e.type === 'boundary');
+    const powerUps = world.entities.filter(e => e.type === 'powerUp');
+    const ghosts = world.entities.filter(e => e.type === 'ghost');
    
     
-    buildClassicMap({ boundaries, pellets, powerUps })
+    buildClassicMap(world);
 
     // Skapa spelaren
     if (player) {
@@ -30,43 +34,44 @@ export function initClassicLevel(world) {
     }
 
     if (ghosts.length === 0) {
-        ghosts.push(new Ghost({
+        const ghost1 = new Ghost({
                     position: {
                         x: 6 * Boundary.width + Boundary.width / 2,
                         y: Boundary.height + Boundary.height / 2
                     },
                     velocity: {
-                        x: Ghost.speed,
+                        x: 0,
                         y: 0
                     }
-                }),
+                })
+                addEntity(world, ghost1, ghosts);
         
-                new Ghost({
+                const ghost2 = new Ghost({
                     position: {
                         x: 6 * Boundary.width + Boundary.width / 2,
                         y: 3 * Boundary.height + Boundary.height / 2
                     },
                     velocity: {
-                        x: Ghost.speed,
+                        x: 0,
                         y: 0
                     },
                     color: 'red'
-                }))
+                })
+                addEntity(world, ghost2, ghosts);
         
                 if (winCount > 1) {
-                ghosts.push(
-                    new Ghost({
+                const ghost3 = new Ghost({
                     position: {
                         x: 6 * Boundary.width + Boundary.width / 2,
                         y: 5 * Boundary.height + Boundary.height / 2
                     },
                     velocity: {
-                        x: Ghost.speed,
+                        x: 0,
                         y: 0
                     },
                     color: 'pink'
                 })    
-                )
+                addEntity(world, ghost3, ghosts);
             }
         }
 }

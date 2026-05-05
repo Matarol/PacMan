@@ -9,11 +9,16 @@ import { playSound } from "./audioManager.js";
 import { removeEntity } from "./itemsController.js";
 
 export async function updateSpaceMode(world, deltaTime, returnToMainMap, handleGameOver, showMenu) {
-    const { player, villains = [], boundaries, keys, gameState, pellets, scoreEl, activeEffects } = world
+
+    const entities = world.entities;
+
+    const player = entities.find(e => e.type === 'player');
+    const boundaries = entities.filter(e => e.type === 'boundary');
+    const villains = entities.filter(e => e.type === 'villain');
+
+    const { gameState, keys } = world;
 
     if (!player || !player.velocity) return
-
-    // villains = villains || []
 
     handleSpaceMovement(player, keys, boundaries, deltaTime);
 
@@ -50,8 +55,7 @@ export async function updateSpaceMode(world, deltaTime, returnToMainMap, handleG
         if (circleCollidesWithCircle(player, v)) {
             if (v.miniature) {
                 const savedVillain = { ...v };
-                villains.splice(i, 1);
-                removeEntity(v, world)
+                removeEntity(v, world);
                 await handleVillainEaten({ eatenVillain: savedVillain, world, showMenu });
                 return;
             } else {
@@ -69,7 +73,11 @@ export async function updateSpaceMode(world, deltaTime, returnToMainMap, handleG
 }
 
 export function updateClassicMode(world, currentDirection, nextDirection, deltaTime) {
-    const { player, ghosts, boundaries } = world;
+    // const { player, ghosts, boundaries } = world;
+    const entities = world.entities;
+
+    const player = entities.find(e => e.type === 'player');
+    const boundaries = entities.filter(e => e.type === 'boundary');
 
     const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries, deltaTime);
 

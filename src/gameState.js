@@ -27,7 +27,9 @@ export const gameState = {
     lastDamageTime: 0
 }
 
-export function resolvePlayerGhostCollision(player, ghosts, world) {
+export function resolvePlayerGhostCollision(world) {
+    const ghosts = world.entities.filter(e => e.type === 'ghost');
+    const player = world.entities.find(e => e.type === 'player');
 
     for (let i = ghosts.length -1; i >= 0; i--) {
          const ghost = ghosts[i]
@@ -35,7 +37,6 @@ export function resolvePlayerGhostCollision(player, ghosts, world) {
         if (circleCollidesWithCircle(player, ghost)) {
             if (ghost.scared) {
                 playSound('eat-ghost')
-                ghosts.splice(i, 1)
                 removeEntity(ghost, world)
                 return { result: 'ghost_eaten' }
             } else {
@@ -48,15 +49,9 @@ export function resolvePlayerGhostCollision(player, ghosts, world) {
 }
 
 export function checkWin(world) {
-    const { pellets } = world;
-
-    if (!pellets || pellets.length === 0) return true;
-    
-    // Vi filtrerar bort allt som inte är en vanlig mat-pellet.
-    // Vi vill bara vinna om de klassiska, icke-farliga pelletsen är slut.
-    const normalPelletsLeft = pellets.filter(p => !p.isDangerous);
-
-    return normalPelletsLeft === 0;
+    return !world.entities.some(
+        e => e.type === 'pellet' && !e.isDangerous
+    );
 }
 
 export function damagePlayer(amount, gameState) {

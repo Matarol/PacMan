@@ -11,12 +11,12 @@ export const portalState = {
     exitPortalInterval: null
 };
 
-export function openRandomPortal(boundaries) {
+export function openRandomPortal(world) {
     if (portalState.portalBoundary) {
         portalState.portalBoundary.isPortal = false;
     }
 
-    const candidates = boundaries.filter(b => b.boundaryType === 'block');
+    const candidates = world.entities.filter(e => e.type === 'boundary' && e.boundaryType === 'block');
 
     if (candidates.length > 0) {
         const randomIndex = Math.floor(Math.random() * candidates.length);
@@ -34,15 +34,15 @@ export function openRandomPortal(boundaries) {
     }
 }
 
-export function triggerPortalTimer(boundaries) {
+export function triggerPortalTimer(world) {
     if (gameState.hasVisitedExtraLevel) return;
 
     clearTimeout(portalState.portalTimer);
 
     if (gameState.gameRunning) {
-        openRandomPortal(boundaries);
+        openRandomPortal(world);
         const nextTick = Math.random() * 10000 + 10000;
-        portalState.portalTimer = setTimeout(() => triggerPortalTimer(boundaries), nextTick);
+        portalState.portalTimer = setTimeout(() => triggerPortalTimer(world), nextTick);
     }
 }
 
@@ -59,10 +59,13 @@ export function clearPortalTimers() {
     }
 }
 
-export function checkPortalCollision(player, boundaries) {
+export function checkPortalCollision(world) {
+    const player = world.entities.find(e => e.type === 'player');
+    if (!player) return null;
+
     if (player.physicsMode === 'SPACE' || gameState.hasVisitedExtraLevel) return null;
     
-    const activePortal = boundaries.find(b => b.isPortal);
+    const activePortal = world.entities.find(e => e.type === 'boundary' && e.isPortal);
     if (activePortal && circleCollidesWithRectangle({ circle: {
         ...player,
         velocity: { x: 0, y: 0}
@@ -85,7 +88,8 @@ export function handlePortalEntry(world) {
 }
 
 // Funktion som öppnar portal i rymdbanan
-function openExitPortal(pellets) {
+function openExitPortal(world) {
+    const pellets = world.entities.filter(e => e.type === 'pellet');
     const dangerousPellets = pellets.filter(p => p.isDangerous)
 
     if (dangerousPellets.length === 0) return
@@ -100,12 +104,14 @@ function openExitPortal(pellets) {
 }
 
 // Funktion för portal timer i rymdbanan
-export function startExitPortalLoop(player, pellets) {
+export function startExitPortalLoop(world) {
     clearInterval(portalState.exitPortalInterval)
 
     portalState.exitPortalInterval = setInterval(() => {
+        const player = world.entities.find(e => e.type === 'player');
+
         if (player.physicsMode === 'SPACE') {
-            openExitPortal(pellets);
+            openExitPortal(world);
         } else {
             clearInterval(portalState.exitPortalInterval);
             portalState.exitPortalInterval = null
