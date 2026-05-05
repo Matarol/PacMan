@@ -1,9 +1,8 @@
 ﻿import { resolvePlayerGhostCollision } from "../gameState.js";
 
 export function updateCollisions(world) {
+    const player = world.entities.find(e => e.type === 'player');
     const result = resolvePlayerGhostCollision(
-        world.player,
-        world.ghosts,
         world
     );
 

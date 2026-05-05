@@ -1,25 +1,26 @@
-﻿import { Ghost } from './ghost.js'
-import { Pellet } from './items.js'
+﻿import { addEntity, removeEntity } from './utils/entityHelpers.js';
+import { Ghost } from './ghost.js'
+import { Pellet, PowerUp } from './items.js'
 
 export const levelState = {
     savedPositions: {
-        player: null,
-        ghosts: [],
-        pellets: [],
-        powerUps: [],
-        villains: []
+        playerData: null,
+        ghostsData: [],
+        pelletsData: [],
+        powerUpsData: [],
+        villainsData: []
     }
 };
 
 // Hjälpfunktion för att nollställa banan
 function clearCurrentLevel(world) {
-    world.pellets.length = 0;
-    world.powerUps.length = 0;
-    world.boundaries.length = 0;
-    world.ghosts.length = 0;
-    if (world.villains) world.villains.length = 0;
+    const player = world.entities.find(e => e.type === 'player');
 
     world.entities.length = 0; // Rensa den generella entities-arrayen också
+
+    if (player) {
+        addEntity(world, player); // Lägg tillbaka spelaren så vi inte tappar referensen
+    }
 }
 
 // Hjälpfunktion som hittar grid-position för character som återkommer till klassiska banan
@@ -56,7 +57,7 @@ function runLevelTransition(world, targetMode) {
 export function changeLevel(config, world) {
 
     if (config.saveCurrent) {
-        saveCurrentLevelState(world.player, world.ghosts, world.pellets, world.powerUps, world.villains);
+        saveCurrentLevelState(world);
     }
 
     // Rensa banan innan vi laddar nästa
@@ -79,27 +80,34 @@ export function changeLevel(config, world) {
 /**
  * Sparar ner tillståndet från den aktuella nivån innan vi byter
  */
-export function saveCurrentLevelState(player, ghosts, pellets, powerUps, villains = []) {
-    levelState.savedPositions.player = { ...player.position };    
-    levelState.savedPositions.ghosts = ghosts.map(g => ({
+export function saveCurrentLevelState(world) {
+    const player = world.entities.find(e => e.type === 'player');
+    const ghosts = world.entities.filter(e => e.type === 'ghost');
+    const pellets = world.entities.filter(e => e.type === 'pellet');
+    const powerUps = world.entities.filter(e => e.type === 'powerUp');
+    const villains = world.entities.filter(e => e.type === 'villain');
+
+    levelState.savedPositions.playerData = player ? { ...player.position } : null;
+
+    levelState.savedPositions.ghostsData = ghosts.map(g => ({
         x: g.position.x,
         y: g.position.y,
         velocity: { ...g.velocity },
         color: g.color
     }));
 
-    levelState.savedPositions.pellets = pellets.map(p => ({
+    levelState.savedPositions.pelletsData = pellets.map(p => ({
         x: p.position.x,
         y: p.position.y,
         isDangerous: p.isDangerous
     }));
 
-    levelState.savedPositions.powerUps = powerUps.map(p => ({
+    levelState.savedPositions.powerUpsData = powerUps.map(p => ({
         x: p.position.x,
         y: p.position.y
     }));
 
-    levelState.savedPositions.villains = [...villains];
+    levelState.savedPositions.villainsData = [...villains];
 }
 
 /**
@@ -108,7 +116,14 @@ export function saveCurrentLevelState(player, ghosts, pellets, powerUps, villain
 // levelManager.js
 
 function restoreLevel(config, world) {
-    const { player, ghosts, pellets, powerUps, villains, c, gameState } = world;
+    const { c, gameState } = world;
+    const pellets = world.entities.filter(e => e.type === 'pellet');
+    const powerUps = world.entities.filter(e => e.type === 'powerUp');
+    const player = world.entities.find(e => e.type === 'player');
+    const ghosts = world.entities.filter(e => e.type === 'ghost');
+    const villains = world.entities.filter(e => e.type === 'villain');
+
+
     const { savedPositions } = levelState;
 
     world.entities.length = 0; // Rensa den generella entities-arrayen också
@@ -116,60 +131,55 @@ function restoreLevel(config, world) {
     config.initLevel(world); // För att bygga upp banan och placera ut saker på rätt ställen
 
     // Återställ kartan smart
-    if (savedPositions.pellets.length > 0) {
-        pellets.length = 0; // Rensa ut de som initLevel lade dit
+    world.entities = world.entities.filter(e => e.type !== 'pellet');
         
-        savedPositions.pellets.forEach(data => {
-            pellets.push(new Pellet({
-                position: { x: data.x, y: data.y },
-                context: c,
-                isDangerous: data.isDangerous
-            }));
-        });    
-    }
+    savedPositions.pelletsData.forEach(data => {
+        const pellet = new Pellet({
+            position: { x: data.x, y: data.y },
+            context: c,
+            isDangerous: data.isDangerous
+        });
+        addEntity(world, pellet);
+    });
+
+    world.entities = world.entities.filter(e => e.type !== 'powerUp');
 
     // Återställ power-ups
-    if (savedPositions.powerUps.length > 0) {
-        powerUps.length = 0;
-        savedPositions.powerUps.forEach(data => {
-            powerUps.push(new PowerUp({
-                position: { x: data.x, y: data.y },
-                context: c
-            }));
+    savedPositions.powerUpsData.forEach(data => {
+        const powerUp = new PowerUp({
+            position: { x: data.x, y: data.y },
+            context: c
         });
-    }
+        addEntity(world, powerUp);
+    });
 
-    // Återställ spöken
-    if (savedPositions.ghosts.length > 0) {
-        ghosts.length = 0;
-        savedPositions.ghosts.forEach(data => {
-            ghosts.push(new Ghost({
-                position: { x: data.x, y: data.y },
-                velocity: { x: data.velocity.x, y: data.velocity.y },
-                color: data.color,
-                context: c
-            }));
+    world.entities = world.entities.filter(e => e.type !== 'ghost');    
+
+    // Återställ spöken    
+    savedPositions.ghostsData.forEach(data => {
+        const ghost = new Ghost({
+            position: { x: data.x, y: data.y },
+            velocity: { x: data.velocity.x, y: data.velocity.y },
+            color: data.color,
+            context: c
         });
-    }
+
+        addEntity(world, ghost);
+    });
+
+    world.entities = world.entities.filter(e => e.type !== 'villain');
 
     // Återställ skurkar
-    if (savedPositions.villains.length > 0) {
-        savedPositions.villains.forEach(v => villains.push(v));
-    }
+    savedPositions.villainsData.forEach(v => {
+        addEntity(world, v);
+    });    
     
-    // Återställ spelaren
-    if (savedPositions.player) {
-        const snappedPosition = snapToGrid(savedPositions.player);
-        player.position.x = snappedPosition.x;
-        player.position.y = snappedPosition.y;
-    }
+    // Återställ spelaren    
+    const snappedPosition = snapToGrid(savedPositions.playerData);
+    player.position.x = snappedPosition.x;
+    player.position.y = snappedPosition.y;
 
-    world.entities.push(player);
-    world.entities.push(...world.boundaries);
-    world.entities.push(...world.pellets);
-    world.entities.push(...world.powerUps);
-    world.entities.push(...world.ghosts);
-    if (world.villains) world.entities.push(...world.villains);
+    addEntity(world, player);
 
     // 1. Nollställ hastigheten helt (så han inte "glider" in i en vägg direkt)
     player.velocity.x = 0;

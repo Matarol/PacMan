@@ -37,8 +37,16 @@ function getBestDirection(ghost, choices, targetPos) {
 }
 
 export function updateGhosts(world, deltaTime) {
-    if (!world || !Array.isArray(world.ghosts)) return;
-    const { ghosts, boundaries, player } = world
+    if (!world || !Array.isArray(world.entities)) return;
+
+    const entities = world.entities;
+
+    const ghosts = entities.filter(e => e.type === 'ghost');
+    const boundaries = entities.filter(e => e.type === 'boundary');
+    const player = entities.find(e => e.type === 'player');
+
+    if (!player) return;
+
     ghosts.forEach(ghost => {
         const steps = 4;
         const stepDelta = deltaTime / steps;
@@ -97,12 +105,7 @@ export function updateGhosts(world, deltaTime) {
 
                 // Hitta motsatt riktning (för att undvika 180-svängar)
                 const forbiddenDirection = ghost.cameFrom
-                // let opposite = '';
-                // if (ghost.lastDirection === 'right') opposite = 'left';
-                // else if (ghost.lastDirection === 'left') opposite = 'right';
-                // else if (ghost.lastDirection === 'down') opposite = 'up';
-                // else if (ghost.lastDirection === 'up') opposite = 'down';
-
+                
                 // Prioritera vägar som INTE är tillbaka där vi kom ifrån
                 let validOptions = pathways.filter(dir => dir !== forbiddenDirection);
                 

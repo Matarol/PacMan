@@ -22,16 +22,16 @@ import { updateClassicMode, updateSpaceMode } from './gameLoopController.js'
 import { renderLevel } from './renderLevel.js'
 import { playSound } from './audioManager.js'
 import { levelState, saveCurrentLevelState, changeLevel } from './levelManager.js'
+import { addEntity } from './utils/entityHelpers.js'
 
 const canvas = document.getElementById('canvas1');
 const c = canvas.getContext('2d');
 
-let pellets = []
-let powerUps = []
-let boundaries = []
-let ghosts = []
+// let powerUps = []
+// let boundaries = []
+// let ghosts = []
 let player
-let villains = []
+// let villains = []
 let winCount = 0
 let activeEffects = [] // Array för att hålla reda på texterna
 let lastTime = performance.now()
@@ -52,13 +52,6 @@ let nextDirection = null
 const world = {
     entities: [],
     gameState: gameState,
-    get pellets() { return pellets },
-    get powerUps() { return powerUps },
-    get boundaries() { return boundaries },
-    get ghosts() { return ghosts },
-    get villains() { return villains },
-    get player() { return player },
-    set player(value) { player = value },
     get activeEffects() { return activeEffects },
     get scoreEl() { return document.getElementById('scoreEl') },
     get winCount() { return winCount },
@@ -156,12 +149,6 @@ async function init() {
     updateUI(gameState)
 
     //Rensa och förbered listor
-    pellets.length = 0;
-    powerUps.length = 0;
-    boundaries.length = 0;
-    ghosts.length = 0;
-    if (villains) villains.length = 0;
-
     world.entities.length = 0; // Rensa den generella entities-arrayen också
 
     //Skapa SPELAREN OCH SPÖKENA HÄR (Innan initClassicLevel)
@@ -170,18 +157,17 @@ async function init() {
         velocity: { x: 0, y: 0 }
     })
 
-    world.player = player
+    addEntity(world, player);
 
     initClassicLevel(world)
 
-    world.entities.push(player)
-    world.entities.push(...ghosts)
-    world.entities.push(...boundaries)
-    world.entities.push(...powerUps)
-    world.entities.push(...pellets)
-    world.entities.push(...villains)
+    //Koll för att se vilka entity-typer som faktiskt finns i world.entities efter initClassicLevel
+    const counts = world.entities.reduce((acc, e) => {
+        acc[e.type] = (acc[e.type] || 0) + 1
+        return acc
+    }, {})
 
-    setTimeout(() => triggerPortalTimer(boundaries), 10000);
+    setTimeout(() => triggerPortalTimer(world), 10000);
     lastTime = performance.now()
     startCountdown(GAME_MODES.CLASSIC)
 }
@@ -267,13 +253,14 @@ async function updateFrame(deltaTime) {
         console.error("PLAYER BROKEN", player)
     }
 
-    if (world.villains) {
-        world.villains.forEach((v, i) => {
-            if (!v || !v.velocity) {
-                console.error("BAD VILLAIN", i, v)
-            }
-        })
-    }
+    const villains = world.entities.filter(e => e.type === 'villain');
+
+    villains.forEach((v, i) => {
+        if (!v || !v.velocity) {
+            console.error("BAD VILLAIN", i, v)
+        }
+    })
+    
 
 } //end of updateFrame
 
@@ -295,7 +282,6 @@ window.onload = async () => {
     logicalHeight = dimensions.logicalHeight
     highScoreEl.innerText = localStorage.getItem('pacman-highscore') || 0
     showMenu('START', { startGame: () => engine.start() })
-    // updateFrame(performance.now())
 }
 
 setupInput({
