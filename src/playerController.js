@@ -1,5 +1,4 @@
-﻿import { Player } from "./player.js"
-import { circleCollidesWithRectangle, circlesCollide, getRepulsionVelocity, isCenteredInTile } from "./collision.js"
+﻿import { circleCollidesWithRectangle, isCenteredInTile } from "./collision.js"
 import { playSound } from "./audioManager.js"
 
 export function handlePlayerMovement(player, currentDirection, nextDirection, boundaries, deltaTime) {

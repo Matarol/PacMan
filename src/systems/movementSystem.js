@@ -1,26 +1,16 @@
 ﻿import { updateClassicMode, updateSpaceMode } from "../gameLoopController.js";
-import { GAME_MODES, gameState } from "../gameState.js";
+import { GAME_MODES } from "../gameState.js";
 
-export async function updateMovement(
-    world,
-    gameState,
-    deltaTime,
-    directionState,
-    actions
-) {
+export async function updateMovement(world, deltaTime) {
+
+    const { gameState, directionState, actions } = world;
+
     switch (gameState.mode) {
         case GAME_MODES.CLASSIC: {
-            const result = updateClassicMode(
-                world,
-                directionState.currentDirection,
-                directionState.nextDirection,
-                deltaTime
-            );
+            const result = updateClassicMode(world, deltaTime);
 
             return {
-                shouldInteruptFrame: false,
-                currentDirection: result.currentDirection,
-                nextDirection: result.nextDirection
+                shouldInterruptFrame: false,
             };
         }
 
@@ -34,7 +24,7 @@ export async function updateMovement(
             );
 
             return {
-                shouldInteruptFrame: false,
+                shouldInterruptFrame: false,
                 currentDirection: directionState.currentDirection,
                 nextDirection: directionState.nextDirection
             };
@@ -43,14 +33,14 @@ export async function updateMovement(
         case GAME_MODES.MENU:
         case GAME_MODES.GAME_OVER:
             return {
-                shouldInteruptFrame: true,
+                shouldInterruptFrame: true,
                 currentDirection: directionState.currentDirection,
                 nextDirection: directionState.nextDirection
             };
 
         default:
             return {
-                shouldInteruptFrame: false,
+                shouldInterruptFrame: false,
                 currentDirection: directionState.currentDirection,
                 nextDirection: directionState.nextDirection
             };

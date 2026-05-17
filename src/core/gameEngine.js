@@ -1,24 +1,29 @@
 ﻿/**
  * Hanterar spelets huvudloop, systemuppdateringar och rendering.
  */
+
+/**
+ * @typedef {{
+ *   init?: () => Promise<void> | void,
+ *   update?: (deltaTime: number) => Promise<void> | void,
+ *   render?: () => void
+ * }} GameSystems
+ */
 export class GameEngine {
     constructor({
         canvas,
         c,
         world,
         gameState,
-        systems = []
-    }) {
-        this.canvas = canvas;
-        this.c = c;
-        this.world = world;
-        this.gameState = gameState;
-
-        this.systems = {
-            init: systems.init,
-            update: systems.update,
-            render: systems.render
-        };
+        
+        systems = {}
+        }) {
+            this.canvas = canvas;
+            this.c = c;
+            this.world = world;
+            this.gameState = gameState;
+            /** @type {GameSystems} */
+            this.systems = systems;
 
         this.lastTime = performance.now();
         this.animationId = null;
@@ -64,6 +69,8 @@ export class GameEngine {
      * Stoppar spelloopen och avbryter nästa planerade rendering.
      */
     stop() {
-        cancelAnimationFrame(this.animationId);
+        if (this.animationId !== null) {
+            cancelAnimationFrame(this.animationId);
+        }
     };
 };

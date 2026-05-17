@@ -1,5 +1,7 @@
 export function setupInput(callbacks) {
 
+    const { setNextDirection, togglePause, isGameRunning, keys} = callbacks
+
     function pressKey(dir) {
         keys.w.pressed = false
         keys.a.pressed = false
@@ -7,10 +9,9 @@ export function setupInput(callbacks) {
         keys.d.pressed = false
 
         keys[dir].pressed = true
-        callbacks.setNextDirection(dir)
+        setNextDirection(dir)
     }
-    const { setNextDirection, togglePause, isGameRunning, keys} = callbacks
-
+    
     let touchStartX = 0
     let touchstartY = 0
     let minSwipeDist = 15
@@ -44,7 +45,7 @@ export function setupInput(callbacks) {
                 keys.d.pressed = true
                 setNextDirection('d')
             break
-            case 'Escape': callbacks.togglePause()
+            case 'Escape': togglePause()
             break
         }
     })
@@ -73,7 +74,7 @@ export function setupInput(callbacks) {
     }, { passive: false })
 
     window.addEventListener('touchmove', (e) => {
-        if (!callbacks.isGameRunning()) return
+        if (!isGameRunning()) return
         e.preventDefault()
 
         const touchCurrentX = e.touches[0].clientX

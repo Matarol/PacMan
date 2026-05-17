@@ -1,0 +1,33 @@
+﻿export function createVillain({position, velocity}) {
+    return {
+        position,
+        velocity,
+        radius: 25,
+        radians: 0.75,
+        openRate: 0.12,
+        rotation: 0,
+        eyesOffsetX: 3,
+        eyesOffsetY: -6,
+        miniature: false,
+        type: 'villain',
+        draw(c) {
+            c.save()
+            c.translate(this.position.x, this.position.y)
+            c.rotate(this.rotation)
+            c.translate(-this.position.x, -this.position.y)
+            c.beginPath()
+            c.arc(this.position.x, this.position.y, this.radius, this.radians, Math.PI * 2 - this.radians)
+            c.lineTo(this.position.x, this.position.y)
+            c.fillStyle = this.miniature ? '#f863d5' : '#ff3300'
+            c.fill()
+            c.closePath()
+            c.restore()
+
+            c.beginPath()
+            c.arc(this.position.x + this.eyesOffsetX, this.position.y + this.eyesOffsetY, 3, 0, Math.PI * 2)
+            c.closePath()
+            c.fillStyle = 'black'
+            c.fill()
+        }
+    }
+}

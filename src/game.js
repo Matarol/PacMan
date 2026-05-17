@@ -1,37 +1,62 @@
 ﻿import { GameEngine } from './core/gameEngine.js'
-import { renderCountdown, renderFrame } from './systems/renderSystem.js'
+import { renderFrame } from './systems/renderSystem.js'
 import { updateEffects } from './systems/effectSystem.js'
 import { updateCollisions } from './systems/collisionSystem.js'
 import { updateItemSystem } from './systems/itemSystem.js'
 import { updatePortals } from './systems/portalSystem.js'
 import { updateMovement } from './systems/movementSystem.js'
 import { showMenu } from './menu.js'
-import { Player } from './player.js'
-import { Ghost } from './ghost.js'
 import { Boundary } from './boundary.js'
-import { Pellet } from './items.js'
 import { classicLayout } from './classicMap.js'
 import { initClassicLevel, classicConfig } from './classicLevel.js'
-import { updateItems } from './itemsController.js'
-import { resolvePlayerGhostCollision, checkWin, gameState, damagePlayer, GAME_MODES } from './gameState.js'
+import { checkWin, gameState, GAME_MODES } from './gameState.js'
 import { setupInput } from './inputHandler.js'
-import { initSpaceLevel, spaceConfig } from './spaceLevel.js'
-import { handlePortalEntry, triggerPortalTimer, clearPortalTimers, checkPortalCollision } from './portalManager.js'
+import { triggerPortalTimer, clearPortalTimers } from './portalManager.js'
 import { updateUI, hideUIOverlay, drawStaticMap } from './uiManager.js'
-import { updateClassicMode, updateSpaceMode } from './gameLoopController.js'
 import { renderLevel } from './renderLevel.js'
 import { playSound } from './audioManager.js'
-import { levelState, saveCurrentLevelState, changeLevel } from './levelManager.js'
+import { changeLevel } from './levelManager.js'
 import { addEntity } from './utils/entityHelpers.js'
+import { createPlayer } from './factories/playerFactory.js'
+import { updatePlayer } from './systems/playerSystem.js'
 
-const canvas = document.getElementById('canvas1');
+/**
+ * @typedef {{
+ * entities: any[],
+ * gameState: any,
+ * keys: any,
+ * c: CanvasRenderingContext2D,
+ * canvas: HTMLCanvasElement,
+ * directionState: {
+ *   currentDirection: string | null,
+ *   nextDirection: string | null
+ * },
+ * actions: {
+ *   damagePlayer: (amount: number) => any,
+ *   returnToMainMap: () => void,
+ *   handleGameOver: (isWin: boolean) => void,
+ *   showMenu: (...args: any[]) => void
+ * },
+ * activeEffects: any[],
+ * scoreEl: HTMLElement,
+ * winCount: number
+ * }} World
+ */
+
+
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('canvas1'));
+
+if (!canvas) {
+    throw new Error('Canvas element not found');
+}
+
 const c = canvas.getContext('2d');
 
-// let powerUps = []
-// let boundaries = []
-// let ghosts = []
+if (!c) {
+    throw new Error('Could not get 2D context from canvas');
+}
+
 let player
-// let villains = []
 let winCount = 0
 let activeEffects = [] // Array för att hålla reda på texterna
 let lastTime = performance.now()
@@ -45,19 +70,49 @@ const keys = {
     d: { pressed: false }
 }
 
-let currentDirection = null
-let nextDirection = null
-
 // Samlar alla viktiga variabler i ett globalt "world"-objekt för enklare åtkomst i andra moduler
 const world = {
     entities: [],
     gameState: gameState,
-    get activeEffects() { return activeEffects },
-    get scoreEl() { return document.getElementById('scoreEl') },
-    get winCount() { return winCount },
     keys: keys,
     c: c,
-    canvas: canvas
+    canvas: canvas,
+
+    directionState: {
+        currentDirection: null,
+        nextDirection: null
+    },
+
+    actions: {
+        damagePlayer: (amount) => {
+            const now = Date.now()
+            const { gameState } = world;
+
+            // Cooldown på att ta skada
+            if (now - gameState.lastDamageTime < 800) {
+                return { result: 'damage_ignored' }
+            }
+
+            world.gameState.health -= amount;
+            playSound('damage-by-villain')
+            gameState.lastDamageTime = now;
+
+            if (world.gameState.health <= 0) {
+                gameState.health = 0
+                playSound('lose')
+                world.actions.handleGameOver(false);
+                return { result: 'player_dead' }
+            }
+            return { result: 'damaged' }
+        },
+        returnToMainMap: () => returnToMainMap(),
+        handleGameOver: (isWin) => handleGameOver(isWin),
+        showMenu: (...args) => showMenu(...args)
+    },
+
+    get activeEffects() { return activeEffects },
+    get scoreEl() { return document.getElementById('scoreEl') },
+    get winCount() { return winCount }    
 }
 
 function startCountdown(nextMode) {
@@ -114,10 +169,11 @@ function handleGameOver(isWin) {
     gameState.mode = GAME_MODES.GAME_OVER
 
     const finalScore = gameState.streakScore + gameState.score
+    const currentHighScore = Number(gameState.highScore) || 0
 
-    if (!isWin && finalScore > gameState.highScore) {
-        gameState.highScore = finalScore
-        localStorage.setItem('pacman-highscore', finalScore)
+    if (!isWin && finalScore > currentHighScore) {
+        gameState.highScore = String(finalScore)
+        localStorage.setItem('pacman-highscore', gameState.highScore)
     }
 
     showMenu('GAMEOVER',
@@ -152,7 +208,7 @@ async function init() {
     world.entities.length = 0; // Rensa den generella entities-arrayen också
 
     //Skapa SPELAREN OCH SPÖKENA HÄR (Innan initClassicLevel)
-    player = new Player({
+    player = createPlayer({
         position: { x: Boundary.width * 1.5, y: Boundary.height * 1.5 },
         velocity: { x: 0, y: 0 }
     })
@@ -160,12 +216,6 @@ async function init() {
     addEntity(world, player);
 
     initClassicLevel(world)
-
-    //Koll för att se vilka entity-typer som faktiskt finns i world.entities efter initClassicLevel
-    const counts = world.entities.reduce((acc, e) => {
-        acc[e.type] = (acc[e.type] || 0) + 1
-        return acc
-    }, {})
 
     setTimeout(() => triggerPortalTimer(world), 10000);
     lastTime = performance.now()
@@ -191,31 +241,15 @@ async function updateFrame(deltaTime) {
     }
 
     // 2. KÖR LOGIK BEROENDE AV FYSIKMODE
-    const movementState = await updateMovement(
-        world,
-        gameState,
-        deltaTime,
-        {
-            currentDirection,
-            nextDirection
-        },
-        {
-            returnToMainMap,
-            handleGameOver,
-            showMenu
-        }
-    );
-
-    currentDirection = movementState.currentDirection;
-    nextDirection = movementState.nextDirection;
-
+    const movementState = await updateMovement(world, deltaTime)
+    
     if (movementState.shouldInterruptFrame) {
         return;
     }
 
     // 3. KOLLISIONER & ITEMS (gemensamt för båda lägena)
     const collisionState = updateCollisions(world)
-    const itemState = updateItemSystem(world, { returnToMainMap, damagePlayer })
+    const itemState = updateItemSystem(world)
     
     if (collisionState.tookDamage || itemState.shouldUpdateUI) {
         updateUI(gameState);
@@ -242,25 +276,12 @@ async function updateFrame(deltaTime) {
     // 4. RITA BANAN OCH SKÖTA PORTALER
     const portalState = updatePortals(world);
 
-    if (portalState.shouldInteruptFrame) {
+    if (portalState.shouldInterruptFrame) {
         return;
     }
 
     // 🔥 NYTT: UPDATE ENTITIES
-    player.update(deltaTime)
-
-    if (!player || !player.velocity) {
-        console.error("PLAYER BROKEN", player)
-    }
-
-    const villains = world.entities.filter(e => e.type === 'villain');
-
-    villains.forEach((v, i) => {
-        if (!v || !v.velocity) {
-            console.error("BAD VILLAIN", i, v)
-        }
-    })
-    
+    updatePlayer(world, deltaTime)
 
 } //end of updateFrame
 
@@ -280,13 +301,17 @@ window.onload = async () => {
     const dimensions = await drawStaticMap({ canvas, c, classicLayout, Boundary, initClassicLevel })
     logicalWidth = dimensions.logicalWidth
     logicalHeight = dimensions.logicalHeight
-    highScoreEl.innerText = localStorage.getItem('pacman-highscore') || 0
+
+    const highScoreEl = document.getElementById('highScoreEl')
+    if (highScoreEl) {
+        highScoreEl.innerText = localStorage.getItem('pacman-highscore') || '0'
+    }
     showMenu('START', { startGame: () => engine.start() })
 }
 
 setupInput({
-    setNextDirection: (dir) => { nextDirection = dir },
-    isGameRunning: () => gameState.gameRunning,
-    togglePause: togglePause,
-    keys
+    setNextDirection: (dir) => { world.directionState.nextDirection = dir },
+    isGameRunning: () => world.gameState.gameRunning,
+    togglePause,
+    keys: world.keys
 })

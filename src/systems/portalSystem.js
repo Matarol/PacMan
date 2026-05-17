@@ -1,12 +1,13 @@
-﻿import { checkPortalCollision, handlePortalEntry } from "../portalManager.js";
+﻿import { getBoundaries } from "../utils/entitySelectors.js";
+import { checkPortalCollision, handlePortalEntry } from "../portalManager.js";
 
 export function updatePortals(world) {
-    const boundaries = world.entities.filter(e => e.type === 'boundary');
+    const boundaries = getBoundaries(world);
     const didCollide = checkPortalCollision(world);
 
     if (didCollide) {
         handlePortalEntry(world);
     }
 
-    return { didCollide, shouldInteruptFrame: didCollide };
+    return { didCollide, shouldInterruptFrame: didCollide };
 }

@@ -1,7 +1,10 @@
-﻿import { resolvePlayerGhostCollision } from "../gameState.js";
+﻿import {
+    getPlayer
+} from "../utils/entitySelectors.js";
+import { resolvePlayerGhostCollision } from "../gameState.js";
 
 export function updateCollisions(world) {
-    const player = world.entities.find(e => e.type === 'player');
+    const player = getPlayer(world);
     const result = resolvePlayerGhostCollision(
         world
     );

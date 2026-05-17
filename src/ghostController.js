@@ -1,4 +1,3 @@
-import { Ghost } from "./ghost.js"
 import { circleCollidesWithRectangle, isCenteredInTile } from "./collision.js"
 
 function getBestDirection(ghost, choices, targetPos) {
@@ -36,7 +35,7 @@ function getBestDirection(ghost, choices, targetPos) {
     return bestDir
 }
 
-export function updateGhosts(world, deltaTime) {
+export function handleGhostsMovement(world, deltaTime) {
     if (!world || !Array.isArray(world.entities)) return;
 
     const entities = world.entities;
@@ -56,7 +55,7 @@ export function updateGhosts(world, deltaTime) {
             
             // Kolla kollisioner (Samma som förut)
             boundaries.forEach(boundary => {
-                const checkDist = Ghost.speed * stepDelta + 1; // +1 för marginal
+                const checkDist = ghost.speed * stepDelta + 1; // +1 för marginal
                 if (circleCollidesWithRectangle({ circle: { ...ghost, velocity: { x: checkDist, y: 0 } }, rectangle: boundary })) collisions.push('right');
                 if (circleCollidesWithRectangle({ circle: { ...ghost, velocity: { x: -checkDist, y: 0 } }, rectangle: boundary })) collisions.push('left');
                 if (circleCollidesWithRectangle({ circle: { ...ghost, velocity: { x: 0, y: checkDist } }, rectangle: boundary })) collisions.push('down');
@@ -123,26 +122,21 @@ export function updateGhosts(world, deltaTime) {
                     ghost.lastDirection = direction
 
                     // VIKTIGT: Sätt velocity till exakt hastighet
-                    if (direction === 'right') { ghost.velocity.x = Ghost.speed; ghost.velocity.y = 0; }
-                    if (direction === 'left')  { ghost.velocity.x = -Ghost.speed; ghost.velocity.y = 0; }
-                    if (direction === 'down')  { ghost.velocity.x = 0; ghost.velocity.y = Ghost.speed; }
-                    if (direction === 'up')    { ghost.velocity.x = 0; ghost.velocity.y = -Ghost.speed; }
+                    if (direction === 'right') { ghost.velocity.x = ghost.speed; ghost.velocity.y = 0; }
+                    if (direction === 'left')  { ghost.velocity.x = -ghost.speed; ghost.velocity.y = 0; }
+                    if (direction === 'down')  { ghost.velocity.x = 0; ghost.velocity.y = ghost.speed; }
+                    if (direction === 'up')    { ghost.velocity.x = 0; ghost.velocity.y = -ghost.speed; }
                 }
             }
 
-            // Slutlig rörelse
-            if (!isBlocked) {
-                ghost.update(stepDelta, player.position);
-            } else {
-                // Om blockerad, nollställ velocity så den inte "darrar" in i väggen
-                ghost.update(0, player.position);                
-            }
         }
     });
 }
 
 export function scareGhosts(ghosts) {
     ghosts.forEach(ghost => {
-        if (ghost.becomeScared) ghost.becomeScared();
+        ghost.scared = true
+        ghost.angry = false
+        ghost.timer = 400;
     });
 }

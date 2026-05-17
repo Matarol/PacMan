@@ -1,17 +1,24 @@
-﻿export function renderLevel(world) {
+﻿import {
+    getBoundaries,
+    getGhosts,
+    getVillains,
+    getPellets,
+    getPlayer,
+    getPowerUps
+} from "./utils/entitySelectors.js";
+
+export function renderLevel(world) {
 
     // Här samlar vi först allt som inte är entiteter i world-objektet.
     const { c, canvas, activeEffects } = world;
-    // Här samlar vi alla entiteter i en 'grupp' - world.entities.
-    const entities = world.entities;
 
     // Här filtrerar vi ut varje typ av entitet i sin egen variabel för enklare åtkomst senare.
-    const player = world.entities.find(e => e.type === 'player');
-    const ghosts = world.entities.filter(e => e.type === 'ghost');
-    const villains = world.entities.filter(e => e.type === 'villain');
-    const pellets = world.entities.filter(e => e.type === 'pellet');
-    const powerUps = world.entities.filter(e => e.type === 'powerUp');
-    const boundaries = world.entities.filter(e => e.type === 'boundary');
+    const player = getPlayer(world);
+    const ghosts = getGhosts(world);
+    const villains = getVillains(world);
+    const pellets = getPellets(world);
+    const powerUps = getPowerUps(world);
+    const boundaries = getBoundaries(world);
 
     if (!player) return
     
