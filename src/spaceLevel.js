@@ -1,9 +1,10 @@
 import { addEntity } from "../src/utils/entityHelpers.js";
 import { Boundary } from "./boundary.js";
-import { Villain } from "./villain.js";
 import { spaceLayout, buildSpaceMap } from "./spaceMap.js";
 import { gameState, GAME_MODES } from "./gameState.js";
 import { startExitPortalLoop } from "./portalManager.js";
+import { getPlayer } from "./utils/entitySelectors.js";
+import { createVillain } from "./factories/villainFactory.js";
 
 export const spaceConfig = {
     levelName: 'space',
@@ -20,7 +21,7 @@ export const spaceConfig = {
 
 export function initSpaceLevel(world) {
     const { keys, canvas } = world;
-    const player = world.entities.find(e => e.type === 'player');
+    const player = getPlayer(world);
 
     if (!player) {
         console.error("Player entity not found in world.entities during space level initialization.");
@@ -60,7 +61,7 @@ export function initSpaceLevel(world) {
     addEntity(world, player);
 
     //Initierar en villain och adderar till listan
-    const villain = new Villain({
+    const villain = createVillain({
         position: {
             x: villainStart.x * Boundary.width + Boundary.width / 2,
             y: villainStart.y * Boundary.height + Boundary.height / 2

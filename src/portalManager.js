@@ -1,6 +1,11 @@
+import {
+    getPlayer,
+    getPortals,
+    getPellets,
+    getPortalCandidates
+} from "./utils/entitySelectors.js";
 import { gameState } from "./gameState.js";
 import { circleCollidesWithRectangle } from "./collision.js";
-import { classicConfig } from "./classicLevel.js";
 import { spaceConfig } from "./spaceLevel.js";
 import { changeLevel } from "./levelManager.js";
 
@@ -16,7 +21,7 @@ export function openRandomPortal(world) {
         portalState.portalBoundary.isPortal = false;
     }
 
-    const candidates = world.entities.filter(e => e.type === 'boundary' && e.boundaryType === 'block');
+    const candidates = getPortalCandidates(world);
 
     if (candidates.length > 0) {
         const randomIndex = Math.floor(Math.random() * candidates.length);
@@ -60,12 +65,13 @@ export function clearPortalTimers() {
 }
 
 export function checkPortalCollision(world) {
-    const player = world.entities.find(e => e.type === 'player');
+    const player = getPlayer(world);
     if (!player) return null;
 
     if (player.physicsMode === 'SPACE' || gameState.hasVisitedExtraLevel) return null;
     
-    const activePortal = world.entities.find(e => e.type === 'boundary' && e.isPortal);
+    const activePortal = getPortals(world)[0];
+
     if (activePortal && circleCollidesWithRectangle({ circle: {
         ...player,
         velocity: { x: 0, y: 0}
@@ -89,8 +95,8 @@ export function handlePortalEntry(world) {
 
 // Funktion som öppnar portal i rymdbanan
 function openExitPortal(world) {
-    const pellets = world.entities.filter(e => e.type === 'pellet');
-    const dangerousPellets = pellets.filter(p => p.isDangerous)
+    const pellets = getPellets(world);
+    const dangerousPellets = pellets.filter(p => p.isDangerous && !p.isPortal) // bara farliga pellets som inte redan är portaler
 
     if (dangerousPellets.length === 0) return
 
@@ -108,9 +114,9 @@ export function startExitPortalLoop(world) {
     clearInterval(portalState.exitPortalInterval)
 
     portalState.exitPortalInterval = setInterval(() => {
-        const player = world.entities.find(e => e.type === 'player');
+        const player = getPlayer(world);
 
-        if (player.physicsMode === 'SPACE') {
+        if (player?.physicsMode === 'SPACE') {
             openExitPortal(world);
         } else {
             clearInterval(portalState.exitPortalInterval);

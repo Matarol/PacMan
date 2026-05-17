@@ -1,3 +1,10 @@
+import {
+    getGhosts,
+    getVillains,
+    getPellets,
+    getPlayer,
+    getPowerUps
+} from "./utils/entitySelectors.js";
 import { circleCollidesWithCircle } from "./collision.js"
 import { scareGhosts } from "./ghostController.js"
 import { shrunkenVillain } from "./villainController.js"
@@ -13,18 +20,17 @@ export function removeEntity(entity, world) {
     }
 }
 
-export function updateItems(world, callbacks) {
-    const entities = world.entities;
-    const player = entities.find(e => e.type === 'player');
+export function updateItems(world) {
+    const player = getPlayer(world);
     if (!world || !player) return;
-    const pellets = entities.filter(e => e.type === 'pellet');
-    const powerUps = entities.filter(e => e.type === 'powerUp');
-    const ghosts = entities.filter(e => e.type === 'ghost');
-    const villains = entities.filter(e => e.type === 'villain');
+    const pellets = getPellets(world);
+    const powerUps = getPowerUps(world);
+    const ghosts = getGhosts(world);
+    const villains = getVillains(world);
 
-    const { gameState, scoreEl } = world;
+    const { gameState, scoreEl, actions } = world;
     
-    const { damagePlayer, returnToMainMap } = callbacks;
+    const { damagePlayer } = actions;
 
     // Spelare krockar med powerUps
     for (let i = powerUps.length - 1; i >= 0; i-- ) {
@@ -59,7 +65,7 @@ export function updateItems(world, callbacks) {
             }
 
             if (pellet.isDangerous) {
-                const result = damagePlayer(10, gameState)
+                const result = damagePlayer(10)
                 removeEntity(pellet, world)
                 return { result: 'player_damaged' }
 
@@ -77,4 +83,5 @@ export function updateItems(world, callbacks) {
             scoreEl.innerText = gameState.score
         }
     }
+    return { result: null }
 }

@@ -1,29 +1,41 @@
-﻿import { handlePlayerMovement, handleSpaceMovement } from "./playerController.js";
-import { updateGhosts } from "./ghostController.js";
-import { updateVillain } from './villainController.js'
+﻿import {
+    getBoundaries,
+    getGhosts,
+    getPellets,
+    getPlayer,
+    getPowerUps,
+    getVillains,
+} from "./utils/entitySelectors.js";
+import { handlePlayerMovement, handleSpaceMovement } from "./playerController.js";
+import { handleGhostsMovement } from "./ghostController.js";
+import { handleVillainMovement } from './villainController.js'
+import { updateVillains } from "./systems/villainSystem.js";
 import { circleCollidesWithCircle, getCircleRepulsion } from "./collision.js";
-import { damagePlayer } from "./gameState.js";
 import { updateUI } from "./uiManager.js";
 import { handleVillainEaten } from "./villainController.js";
-import { playSound } from "./audioManager.js";
 import { removeEntity } from "./itemsController.js";
+import { updateGhosts } from "./systems/ghostSystem.js";
 
-export async function updateSpaceMode(world, deltaTime, returnToMainMap, handleGameOver, showMenu) {
+export async function updateSpaceMode(world, deltaTime) {
 
-    const entities = world.entities;
+    const { entities, gameState, keys, actions } = world;
 
-    const player = entities.find(e => e.type === 'player');
-    const boundaries = entities.filter(e => e.type === 'boundary');
-    const villains = entities.filter(e => e.type === 'villain');
+    const player = getPlayer(world);
+    const ghosts = getGhosts(world);
+    const boundaries = getBoundaries(world);
+    const villains = getVillains(world);
 
-    const { gameState, keys } = world;
+    const dangerousPellets = getPellets(world).filter(p => p.isDangerous);
+    const powerUps = getPowerUps(world);
+
+    const noWayToWin = villains.length > 0 && dangerousPellets.length === 0 && powerUps.length === 0 && !villains.some(v => v.miniature);
 
     if (!player || !player.velocity) return
 
     handleSpaceMovement(player, keys, boundaries, deltaTime);
 
     boundaries.forEach(boundary => {
-        if (boundary.boundaryType === 'asteroid') {
+        if (boundary.isAsteroid) {
             const asteroid = {
                 position: {
                     x: boundary.position.x + boundary.width / 2,
@@ -36,7 +48,7 @@ export async function updateSpaceMode(world, deltaTime, returnToMainMap, handleG
             player.position.y += pPush.y;
 
             if (Math.hypot(pPush.x, pPush.y) > 0.4) {
-                damagePlayer(5, gameState);
+                actions.damagePlayer(5);
                 updateUI(gameState);
             }
 
@@ -50,38 +62,50 @@ export async function updateSpaceMode(world, deltaTime, returnToMainMap, handleG
 
     for (let i = villains.length - 1; i >= 0; i--) {
         const v = villains[i];
-        updateVillain(v, player, boundaries, deltaTime);
+        handleVillainMovement(v, player, boundaries, deltaTime);        
 
         if (circleCollidesWithCircle(player, v)) {
             if (v.miniature) {
                 const savedVillain = { ...v };
                 removeEntity(v, world);
-                await handleVillainEaten({ eatenVillain: savedVillain, world, showMenu });
+                await handleVillainEaten({ eatenVillain: savedVillain, world });
                 return;
             } else {
-                damagePlayer(15, gameState);                
+                actions.damagePlayer(15);
                 updateUI(gameState);
             }
         }
     }
 
-    if (gameState.health <= 0) {
-        playSound('lose')
-        handleGameOver(false);
+    updateVillains(world, deltaTime);
+
+    if (noWayToWin) {
+        world.actions.handleGameOver(false);
+        return;
     }
 
 }
 
-export function updateClassicMode(world, currentDirection, nextDirection, deltaTime) {
-    // const { player, ghosts, boundaries } = world;
-    const entities = world.entities;
+export function updateClassicMode(world, deltaTime) {
+    const { entities, directionState } = world;
 
     const player = entities.find(e => e.type === 'player');
     const boundaries = entities.filter(e => e.type === 'boundary');
 
-    const result = handlePlayerMovement(player, currentDirection, nextDirection, boundaries, deltaTime);
+    if (!player) {
+        return {
+            currentDirection: directionState.currentDirection,
+            nextDirection: directionState.nextDirection
+        }
+    }
 
-    updateGhosts(world, deltaTime);
+    const result = handlePlayerMovement(player, world.directionState.currentDirection, world.directionState.nextDirection, boundaries, deltaTime);
+
+    world.directionState.currentDirection = result.currentDirection;
+    world.directionState.nextDirection = result.nextDirection;
+
+    handleGhostsMovement(world, deltaTime);
+    updateGhosts(world, deltaTime)
 
     return result;
 }

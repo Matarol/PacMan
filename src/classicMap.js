@@ -1,7 +1,8 @@
-﻿import { Boundary } from "./boundary.js"
-import { Pellet } from "./items.js"
-import { PowerUp } from "./items.js"
+﻿import { createPellet } from "./factories/pelletFactory.js"
+import { Boundary } from "./boundary.js"
 import { addEntity } from "./utils/entityHelpers.js"
+import { createPowerUp } from "./factories/powerUpFactory.js"
+import { createBoundary } from "./factories/boundaryFactory.js"
 
 export const portalImages = [
     createImage('../assets/img/portal_block_1.png'),
@@ -35,12 +36,6 @@ export function createImage(src) {
 
 export function buildClassicMap(world) {
 
-    const { c } = world;
-
-    const boundaries = world.entities.filter(e => e.type === 'boundary');
-    const powerUps = world.entities.filter(e => e.type === 'powerUp');
-    const pellets = world.entities.filter(e => e.type === 'pellet');
-
     classicLayout.forEach((row, i) => {
         row.forEach((symbol, j) => {
             const position = {
@@ -48,124 +43,125 @@ export function buildClassicMap(world) {
                 y: Boundary.height * i
             }
             switch (symbol) {
-                case '-': { const boundary = new Boundary({
+                case '-': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/pipeHorizontal.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
-                case '|': { const boundary = new Boundary({
+                case '|': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/pipeVertical.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
-                case '1': { const boundary = new Boundary({
+                case '1': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/pipeCorner1.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
-                case '2': { const boundary = new Boundary({
+                case '2': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/pipeCorner2.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
-                case '3': { const boundary = new Boundary({
+                case '3': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/pipeCorner3.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
-                case '4': { const boundary = new Boundary({
+                case '4': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/pipeCorner4.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
                 case 'b': {
-                    const boundary = new Boundary({
+                    const boundary = createBoundary({
                         position: position,
-                        image: createImage('../assets/img/block.png')
+                        image: createImage('../assets/img/block.png'),                        
+                        isBlock: true
                     })
-                    boundary.boundaryType = 'block'
-                    addEntity(world, boundary, boundaries);
+                    addEntity(world, boundary);
                 break
             }
-                case '[': { const boundary = new Boundary({
+                case '[': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/capLeft.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
-                case '7': { const boundary = new Boundary({
+                case '7': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/pipeConnectorBottom.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
-                case ']': { const boundary = new Boundary({
+                case ']': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/capRight.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
-                case '_': { const boundary = new Boundary({
+                case '_': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/capBottom.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
-                case '^': { const boundary = new Boundary({
+                case '^': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/capTop.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
-                case '+': { const boundary = new Boundary({
+                case '+': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/pipeCross.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
-                case '5': { const boundary = new Boundary({
+                case '5': { const boundary = createBoundary({
                     position: position,
                     image: createImage('../assets/img/pipeConnectorTop.png')
                 });
-                addEntity(world, boundary, boundaries);
+                addEntity(world, boundary);
                 break
             }
-                case '.': { const pellet = new Pellet({
+                case '.': { const pellet = createPellet({
                     position: {
                         x: Boundary.width * j + Boundary.width / 2,
                         y: Boundary.height * i + Boundary.height / 2
-                }});
-                addEntity(world, pellet, pellets);
+                    }
+                });
+                addEntity(world, pellet);
                 break
             }
-                case 'p': { const powerUp = new PowerUp({
+                case 'p': { const powerUp = createPowerUp({
                     position: {
                         x: Boundary.width * j + Boundary.width / 2,
                         y: Boundary.height * i + Boundary.height / 2
                     }
                 })
-                addEntity(world, powerUp, powerUps);
+                addEntity(world, powerUp);
                 break
             }
-                case '!': { const pellet = new Pellet({
+                case '!': { const pellet = createPellet({
                     position: {
                         x: position.x + Boundary.width / 2,
                         y: position.y + Boundary.height / 2
@@ -173,7 +169,7 @@ export function buildClassicMap(world) {
                     isDangerous: true,
                     color: 'red' // Gör dem röda så de ser farliga ut
                 });
-                addEntity(world, pellet, pellets);
+                addEntity(world, pellet);
                 break;
             }
             }

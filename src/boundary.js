@@ -9,14 +9,19 @@ export class Boundary {
     static totalFrames = 16
     static columns = 4
 
-    constructor({position, image, type}) {
+    constructor({position, image, type, isBlock = type === 'block', canBecomePortal = isBlock, isAsteroid = type === 'asteroid'}) {
         this.position = position
         this.width = 40
         this.height = 40
         this.originalImage = image
         this.image = image
+
         this.type = 'boundary'
-        this.boundaryType = type
+
+        this.isBlock = isBlock
+        this.canBecomePortal = isBlock
+        this.isAsteroid = isAsteroid
+        
         this.isPortal = false
         this.portalFrame = 0
         this.asteroidFrame = 0
@@ -44,7 +49,7 @@ export class Boundary {
             }
 
             // ☄️ Logik för asteroider (Rymdbanan)
-            if (this.boundaryType === 'asteroid') {
+            if (this.isAsteroid) {
                 this.asteroidFrame += this.animationSpeed
                 const frameIndex = Math.floor(this.asteroidFrame) % Boundary.totalFrames
                 const row = Math.floor(frameIndex / Boundary.columns)

@@ -15,11 +15,4 @@ export function removeEntity(world, entity) {
     }
 }
 
-export function getEntityByType(world, type) {
-    return world.entities.find(e => e.type === type);
-}
-
-export function getEntitiesByType(world, type) {
-    return world.entities.filter(e => e.type === type);
-}
 

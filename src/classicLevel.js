@@ -1,11 +1,7 @@
 import { buildClassicMap } from "./classicMap.js"
 import { addEntity } from "./utils/entityHelpers.js"
-import { Player } from "./player.js"
-import { Ghost } from "./ghost.js"
 import { Boundary } from "./boundary.js"
-import { Pellet } from "./items.js"
-import { Villain } from "./villain.js"
-import { levelState } from "./levelManager.js"
+import { createGhost } from "./factories/ghostFactory.js"
 
 // Konfiguration för klassiska banan
 export const classicConfig = {
@@ -18,8 +14,6 @@ export const classicConfig = {
 
 export function initClassicLevel(world) {
     const { player, winCount } = world
-    const boundaries = world.entities.filter(e => e.type === 'boundary');
-    const powerUps = world.entities.filter(e => e.type === 'powerUp');
     const ghosts = world.entities.filter(e => e.type === 'ghost');
    
     
@@ -34,7 +28,7 @@ export function initClassicLevel(world) {
     }
 
     if (ghosts.length === 0) {
-        const ghost1 = new Ghost({
+        const ghost1 = createGhost({
                     position: {
                         x: 6 * Boundary.width + Boundary.width / 2,
                         y: Boundary.height + Boundary.height / 2
@@ -46,7 +40,7 @@ export function initClassicLevel(world) {
                 })
                 addEntity(world, ghost1, ghosts);
         
-                const ghost2 = new Ghost({
+                const ghost2 = createGhost({
                     position: {
                         x: 6 * Boundary.width + Boundary.width / 2,
                         y: 3 * Boundary.height + Boundary.height / 2
@@ -60,7 +54,7 @@ export function initClassicLevel(world) {
                 addEntity(world, ghost2, ghosts);
         
                 if (winCount > 1) {
-                const ghost3 = new Ghost({
+                const ghost3 = createGhost({
                     position: {
                         x: 6 * Boundary.width + Boundary.width / 2,
                         y: 5 * Boundary.height + Boundary.height / 2

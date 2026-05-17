@@ -1,7 +1,4 @@
-﻿import { classicLayout } from './classicMap.js'
-import { Boundary } from './boundary.js'
-
-const scoreEl = document.getElementById('scoreEl');
+﻿const scoreEl = document.getElementById('scoreEl');
 const streakScoreEl = document.getElementById('streakScoreEl');
 const highScoreEl = document.getElementById('highScoreEl');
 const healthBar = document.getElementById('healthBar');

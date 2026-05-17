@@ -21,5 +21,3 @@ export class FloatingText {
         this.opacity -= 0.01 // Tonar bort över ca 1.5 sekund
     }
 }
-
-let activeEffects = [] // Array för att hålla reda på texterna
