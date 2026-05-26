@@ -10,6 +10,8 @@
         eyesOffsetY: -6,
         miniature: false,
         type: 'villain',
+        escapeDirection: null,
+        escapeTimer: 0,
         draw(c) {
             c.save()
             c.translate(this.position.x, this.position.y)

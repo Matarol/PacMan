@@ -248,7 +248,7 @@ async function updateFrame(deltaTime) {
     }
 
     // 3. KOLLISIONER & ITEMS (gemensamt för båda lägena)
-    const collisionState = updateCollisions(world)
+    const collisionState = await updateCollisions(world)
     const itemState = updateItemSystem(world)
     
     if (collisionState.tookDamage || itemState.shouldUpdateUI) {
@@ -281,7 +281,7 @@ async function updateFrame(deltaTime) {
     }
 
     // 🔥 NYTT: UPDATE ENTITIES
-    updatePlayer(world, deltaTime)
+    // updatePlayer(world, deltaTime)
 
 } //end of updateFrame
 

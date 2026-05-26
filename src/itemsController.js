@@ -5,20 +5,13 @@ import {
     getPlayer,
     getPowerUps
 } from "./utils/entitySelectors.js";
+import { removeEntity } from "./utils/entityHelpers.js";
 import { circleCollidesWithCircle } from "./collision.js"
-import { scareGhosts } from "./ghostController.js"
-import { shrunkenVillain } from "./villainController.js"
+import { scareGhosts } from "../src/systems/ghostSystem.js"
+import { shrunkenVillain } from "../src/systems/villainSystem.js"
 import { playSound } from "./audioManager.js"
 import { changeLevel } from "./levelManager.js";
 import { classicConfig } from "./classicLevel.js";
-
-export function removeEntity(entity, world) {
-    const index = world.entities.indexOf(entity);
-
-    if (index !== -1) {
-        world.entities.splice(index, 1);
-    }
-}
 
 export function updateItems(world) {
     const player = getPlayer(world);
@@ -39,14 +32,14 @@ export function updateItems(world) {
         if (circleCollidesWithCircle(powerUp, player)) {
             if (player.physicsMode === 'SPACE' && villains && villains.length > 0) {
                 playSound('power-up')
-                removeEntity(powerUp, world)
+                removeEntity(world, powerUp)
                 villains.forEach(v => {
                     if (!v) return
-                    shrunkenVillain(v)
+                    shrunkenVillain(world, v)
                 })
             } else {
                 playSound('power-up')
-                removeEntity(powerUp, world)
+                removeEntity(world, powerUp)
             //Spöken blir skrämda
             scareGhosts(ghosts)
             }
@@ -66,7 +59,7 @@ export function updateItems(world) {
 
             if (pellet.isDangerous) {
                 const result = damagePlayer(10)
-                removeEntity(pellet, world)
+                removeEntity(world, pellet)
                 return { result: 'player_damaged' }
 
             }
@@ -78,7 +71,7 @@ export function updateItems(world) {
             }
             
             playSound('eat-pellet')
-            removeEntity(pellet, world)
+            removeEntity(world, pellet)
             gameState.score += points
             scoreEl.innerText = gameState.score
         }
