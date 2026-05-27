@@ -1,4 +1,4 @@
-import { Boundary } from './boundary.js'
+import { TILE_SIZE } from "./constants/gameConstants.js"
 
 export function circleCollidesWithCircle(c1, c2) {
     if (!c1 || !c2 || !c1.position || !c2.position) {
@@ -29,7 +29,7 @@ export function circleCollidesWithRectangle({
     circle,
     rectangle
 }) {
-    const padding = Boundary.width / 2 - circle.radius - 1
+    const padding = TILE_SIZE / 2 - circle.radius - 1
     return (circle.position.y - circle.radius + circle.velocity.y <= rectangle.position.y + rectangle.height + padding && circle.position.x + circle.radius + circle.velocity.x >= rectangle.position.x - padding && circle.position.y + circle.radius + circle.velocity.y >= rectangle.position.y - padding && circle.position.x - circle.radius + circle.velocity.x <= rectangle.position.x + rectangle.width + padding)
 }
 
@@ -80,17 +80,17 @@ export function getCircleRepulsion(c1, c2) {
 }
 
 export function isCenteredInTile(entity) {
-    const halfW = Boundary.width / 2
-    const halfH = Boundary.height / 2
+    const halfW = TILE_SIZE / 2
+    const halfH = TILE_SIZE / 2
 
     const centerX =
-        Math.round((entity.position.x - halfW) / Boundary.width) *
-        Boundary.width +
+        Math.round((entity.position.x - halfW) / TILE_SIZE) *
+        TILE_SIZE +
         halfW
 
     const centerY =
-        Math.round((entity.position.y - halfH) / Boundary.height) *
-        Boundary.height +
+        Math.round((entity.position.y - halfH) / TILE_SIZE) *
+        TILE_SIZE +
         halfH
 
     const tolerance = 10

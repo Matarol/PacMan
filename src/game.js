@@ -6,7 +6,6 @@ import { updateItemSystem } from './systems/itemSystem.js'
 import { updatePortals } from './systems/portalSystem.js'
 import { updateMovement } from './systems/movementSystem.js'
 import { showMenu } from './menu.js'
-import { Boundary } from './boundary.js'
 import { classicLayout } from './classicMap.js'
 import { initClassicLevel, classicConfig } from './classicLevel.js'
 import { checkWin, gameState, GAME_MODES } from './gameState.js'
@@ -19,6 +18,7 @@ import { changeLevel } from './levelManager.js'
 import { addEntity } from './utils/entityHelpers.js'
 import { createPlayer } from './factories/playerFactory.js'
 import { updatePlayer } from './systems/playerSystem.js'
+import { TILE_SIZE } from './constants/gameConstants.js'
 
 /**
  * @typedef {{
@@ -60,8 +60,8 @@ let player
 let winCount = 0
 let activeEffects = [] // Array för att hålla reda på texterna
 let lastTime = performance.now()
-let logicalWidth = classicLayout[0].length * Boundary.width;
-let logicalHeight = classicLayout.length * Boundary.height;
+let logicalWidth = classicLayout[0].length * TILE_SIZE;
+let logicalHeight = classicLayout.length * TILE_SIZE;
 
 const keys = {
     w: { pressed: false },
@@ -209,7 +209,7 @@ async function init() {
 
     //Skapa SPELAREN OCH SPÖKENA HÄR (Innan initClassicLevel)
     player = createPlayer({
-        position: { x: Boundary.width * 1.5, y: Boundary.height * 1.5 },
+        position: { x: TILE_SIZE * 1.5, y: TILE_SIZE * 1.5 },
         velocity: { x: 0, y: 0 }
     })
 
@@ -298,7 +298,7 @@ const engine = new GameEngine({
 });
 
 window.onload = async () => {
-    const dimensions = await drawStaticMap({ canvas, c, classicLayout, Boundary, initClassicLevel })
+    const dimensions = await drawStaticMap({ canvas, c, classicLayout, initClassicLevel })
     logicalWidth = dimensions.logicalWidth
     logicalHeight = dimensions.logicalHeight
 

@@ -1,10 +1,10 @@
 import { addEntity } from "../src/utils/entityHelpers.js";
-import { Boundary } from "./boundary.js";
 import { spaceLayout, buildSpaceMap } from "./spaceMap.js";
 import { gameState, GAME_MODES } from "./gameState.js";
 import { startExitPortalLoop } from "./portalManager.js";
 import { getPlayer } from "./utils/entitySelectors.js";
 import { createVillain } from "./factories/villainFactory.js";
+import { TILE_SIZE } from "./constants/gameConstants.js";
 
 export const spaceConfig = {
     levelName: 'space',
@@ -52,8 +52,8 @@ export function initSpaceLevel(world) {
     const pacmanStart = findStartPos(spaceLayout, 'p');
     const villainStart = findStartPos(spaceLayout, 'v');
 
-    player.position.x = pacmanStart.x * Boundary.width + Boundary.width /2;
-    player.position.y = pacmanStart.y * Boundary.height + Boundary.height /2;
+    player.position.x = pacmanStart.x * TILE_SIZE + TILE_SIZE /2;
+    player.position.y = pacmanStart.y * TILE_SIZE + TILE_SIZE /2;
     player.velocity.x = 0;
     player.velocity.y = 0;
 
@@ -63,8 +63,8 @@ export function initSpaceLevel(world) {
     //Initierar en villain och adderar till listan
     const villain = createVillain({
         position: {
-            x: villainStart.x * Boundary.width + Boundary.width / 2,
-            y: villainStart.y * Boundary.height + Boundary.height / 2
+            x: villainStart.x * TILE_SIZE + TILE_SIZE / 2,
+            y: villainStart.y * TILE_SIZE + TILE_SIZE / 2
         },
         velocity: { x: 0, y: 0 }
     });

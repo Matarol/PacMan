@@ -1,4 +1,7 @@
-﻿const scoreEl = document.getElementById('scoreEl');
+﻿import { TILE_SIZE } from "./constants/gameConstants.js";
+import { getBoundaries, getPellets, getPowerUps } from "./utils/entitySelectors.js";
+
+const scoreEl = document.getElementById('scoreEl');
 const streakScoreEl = document.getElementById('streakScoreEl');
 const highScoreEl = document.getElementById('highScoreEl');
 const healthBar = document.getElementById('healthBar');
@@ -6,11 +9,11 @@ const uiOverlay = document.getElementById('ui-overlay');
 
 
 //Ritar upp en statisk karta baserat på den klassiska layouten med syfte att synas bakom menyn
-export async function drawStaticMap({ canvas, c, classicLayout, Boundary, initClassicLevel }) {
+export async function drawStaticMap({ canvas, c, classicLayout, initClassicLevel }) {
     const dpr = window.devicePixelRatio || 1;
 
-    const logicalWidth = classicLayout[0].length * Boundary.width;
-    const logicalHeight = classicLayout.length * Boundary.height;
+    const logicalWidth = classicLayout[0].length * TILE_SIZE;
+    const logicalHeight = classicLayout.length * TILE_SIZE;
 
     const scale = Math.min(window.innerWidth / logicalWidth, 1);
 
@@ -38,9 +41,9 @@ export async function drawStaticMap({ canvas, c, classicLayout, Boundary, initCl
 
     initClassicLevel(previewWorld);
 
-    const tempBoundaries = previewWorld.entities.filter(e => e.type === 'boundary');
-    const tempPowerUps = previewWorld.entities.filter(e => e.type === 'powerUp');
-    const tempPellets = previewWorld.entities.filter(e => e.type === 'pellet');
+    const tempBoundaries = getBoundaries(previewWorld);
+    const tempPowerUps = getPowerUps(previewWorld);
+    const tempPellets = getPellets(previewWorld);
 
     const imagePromises = tempBoundaries.map(b => b.image).filter(img => img instanceof HTMLImageElement).map(img => img.decode().catch(() => {}))
 

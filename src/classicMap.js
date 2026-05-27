@@ -1,8 +1,8 @@
 ﻿import { createPellet } from "./factories/pelletFactory.js"
-import { Boundary } from "./boundary.js"
 import { addEntity } from "./utils/entityHelpers.js"
 import { createPowerUp } from "./factories/powerUpFactory.js"
 import { createBoundary } from "./factories/boundaryFactory.js"
+import { TILE_SIZE } from "./constants/gameConstants.js"
 
 export const portalImages = [
     createImage('../assets/img/portal_block_1.png'),
@@ -39,8 +39,8 @@ export function buildClassicMap(world) {
     classicLayout.forEach((row, i) => {
         row.forEach((symbol, j) => {
             const position = {
-                x: Boundary.width * j,
-                y: Boundary.height * i
+                x: TILE_SIZE * j,
+                y: TILE_SIZE * i
             }
             switch (symbol) {
                 case '-': { const boundary = createBoundary({
@@ -145,8 +145,8 @@ export function buildClassicMap(world) {
             }
                 case '.': { const pellet = createPellet({
                     position: {
-                        x: Boundary.width * j + Boundary.width / 2,
-                        y: Boundary.height * i + Boundary.height / 2
+                        x: TILE_SIZE * j + TILE_SIZE / 2,
+                        y: TILE_SIZE * i + TILE_SIZE / 2
                     }
                 });
                 addEntity(world, pellet);
@@ -154,17 +154,18 @@ export function buildClassicMap(world) {
             }
                 case 'p': { const powerUp = createPowerUp({
                     position: {
-                        x: Boundary.width * j + Boundary.width / 2,
-                        y: Boundary.height * i + Boundary.height / 2
-                    }
+                        x: TILE_SIZE * j + TILE_SIZE / 2,
+                        y: TILE_SIZE * i + TILE_SIZE / 2
+                    },
+                    color: 'white'
                 })
                 addEntity(world, powerUp);
                 break
             }
                 case '!': { const pellet = createPellet({
                     position: {
-                        x: position.x + Boundary.width / 2,
-                        y: position.y + Boundary.height / 2
+                        x: position.x + TILE_SIZE / 2,
+                        y: position.y + TILE_SIZE / 2
                     },
                     isDangerous: true,
                     color: 'red' // Gör dem röda så de ser farliga ut
