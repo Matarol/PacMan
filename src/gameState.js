@@ -1,8 +1,3 @@
-// import { playSound } from "./audioManager.js"
-// import { circleCollidesWithCircle } from "./collision.js"
-// import { removeEntity } from "./utils/entityHelpers.js";
-// import { getGhosts, getPlayer } from "./utils/entitySelectors.js"
-
 export const GAME_MODES = {
     MENU: 'MENU',
     CLASSIC: 'CLASSIC',

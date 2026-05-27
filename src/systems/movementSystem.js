@@ -1,4 +1,4 @@
-﻿import { GAME_MODES, gameState } from "../gameState.js";
+﻿import { GAME_MODES } from "../gameState.js";
 import { updatePlayer } from "./playerSystem.js";
 import { updateGhosts } from "./ghostSystem.js";
 import { updateVillains } from "./villainSystem.js";
@@ -7,10 +7,10 @@ export async function updateMovement(world, deltaTime) {
     const { gameState } = world;
 
     if (
-        gameState.mode === 'PAUSED' ||
-        gameState.mode === 'MENU' ||
-        gameState.mode === 'GAME_OVER' ||
-        gameState.mode === 'COUNTDOWN'
+        gameState.mode === GAME_MODES.PAUSED ||
+        gameState.mode === GAME_MODES.MENU ||
+        gameState.mode === GAME_MODES.GAME_OVER ||
+        gameState.mode === GAME_MODES.COUNTDOWN
     ) {
         return { shouldInterruptFrame: true }
     }
