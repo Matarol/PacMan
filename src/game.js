@@ -18,7 +18,6 @@ import { playSound } from './audioManager.js'
 import { changeLevel } from './levelManager.js'
 import { addEntity } from './utils/entityHelpers.js'
 import { createPlayer } from './factories/playerFactory.js'
-import { updatePlayer } from './systems/playerSystem.js'
 
 /**
  * @typedef {{

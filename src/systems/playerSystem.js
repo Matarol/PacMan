@@ -153,7 +153,7 @@ function handlePlayerSpaceMovement(world, deltaTime) {
   const boundaries = getBoundaries(world)
   const keys = world.keys
 
-  const acceleration = 350
+  const acceleration = 500
   const friction = 0.98
 
   // 1. Rörelse & Friktion
@@ -167,8 +167,8 @@ function handlePlayerSpaceMovement(world, deltaTime) {
   player.velocity.y *= frictionAdjustment
 
   // 2. Flytta först
-  player.position.x += player.velocity.x * deltaTime
-  player.position.y += player.velocity.y * deltaTime
+  // player.position.x += player.velocity.x * deltaTime
+  // player.position.y += player.velocity.y * deltaTime
 
   // 2. Ny 'tvåa' där kollision använder 'predicted position' för att undvika att flytta spelaren i denna funktion.
   const nextPosition = {
