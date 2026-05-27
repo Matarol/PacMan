@@ -9,8 +9,6 @@ import { handleVillainEaten } from "./villainSystem.js";
 import { playSound } from "../audioManager.js";
 
 export async function updateCollisions(world) {
-    const player = getPlayer(world);
-    const villains = getVillains(world);
 
     const ghostResult = resolvePlayerGhostCollision(world);
     const villainResult = await resolvePlayerVillainCollisions(world);
@@ -52,7 +50,7 @@ async function resolvePlayerVillainCollisions(world) {
     const player = getPlayer(world);
     const villains = getVillains(world);
 
-    if (!player) return;
+    if (!player) return { result: null };
 
     for (let i = villains.length -1; i >= 0; i--) {
         const villain = villains[i];
